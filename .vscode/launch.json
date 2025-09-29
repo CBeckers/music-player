@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-MusicPlayerApplication<music-player>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.example.music_player.MusicPlayerApplication",
+            "projectName": "music-player",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
