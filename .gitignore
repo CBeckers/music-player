@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Spotify Secrets ###
+application-secrets.properties
+**/application-secrets.properties
