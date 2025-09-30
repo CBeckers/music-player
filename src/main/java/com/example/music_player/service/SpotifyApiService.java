@@ -22,10 +22,12 @@ public class SpotifyApiService {
     private static final Logger logger = LoggerFactory.getLogger(SpotifyApiService.class);
     
     private final SpotifyAuthService authService;
+    private final TokenManagerService tokenManagerService;
     private final WebClient webClient;
     
-    public SpotifyApiService(SpotifyConfig spotifyConfig, SpotifyAuthService authService) {
+    public SpotifyApiService(SpotifyConfig spotifyConfig, SpotifyAuthService authService, TokenManagerService tokenManagerService) {
         this.authService = authService;
+        this.tokenManagerService = tokenManagerService;
         this.webClient = WebClient.builder()
                 .baseUrl(spotifyConfig.getBaseUrl())
                 .build();
@@ -190,5 +192,164 @@ public class SpotifyApiService {
                 .then()
                 .doOnSuccess(v -> logger.info("Set volume to {}%", volumePercent))
                 .doOnError(error -> logger.error("Error setting volume to {}%", volumePercent, error));
+    }
+
+    /**
+     * Get the user's playback queue
+     */
+    public Mono<String> getQueue(String accessToken) {
+        return webClient.get()
+                .uri("/me/player/queue")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .retrieve()
+                .bodyToMono(String.class)
+                .doOnSuccess(queue -> logger.info("Retrieved user's queue"))
+                .doOnError(error -> logger.error("Error getting queue", error));
+    }
+
+    /**
+     * Add track to playback queue
+     */
+    public Mono<Void> addToQueue(String trackUri, String accessToken) {
+        return webClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/me/player/queue")
+                        .queryParam("uri", trackUri)
+                        .build())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .retrieve()
+                .toBodilessEntity()
+                .then()
+                .doOnSuccess(v -> logger.info("Added track to queue: {}", trackUri))
+                .doOnError(error -> logger.error("Error adding track to queue: {}", trackUri, error));
+    }
+
+    /**
+     * Skip to next track in queue
+     */
+    public Mono<Void> skipToNext(String accessToken) {
+        return webClient.post()
+                .uri("/me/player/next")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .retrieve()
+                .toBodilessEntity()
+                .then()
+                .doOnSuccess(v -> logger.info("Skipped to next track"))
+                .doOnError(error -> logger.error("Error skipping to next track", error));
+    }
+
+    /**
+     * Skip to previous track in queue
+     */
+    public Mono<Void> skipToPrevious(String accessToken) {
+        return webClient.post()
+                .uri("/me/player/previous")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .retrieve()
+                .toBodilessEntity()
+                .then()
+                .doOnSuccess(v -> logger.info("Skipped to previous track"))
+                .doOnError(error -> logger.error("Error skipping to previous track", error));
+    }
+
+    // Auto-refresh wrapper methods for user operations (retry on 401 failure)
+    
+    /**
+     * Play track with automatic token refresh on failure
+     */
+    public Mono<Void> playTrackWithAutoRefresh(String trackUri, String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                accessToken -> playTrack(trackUri, accessToken))
+                .doOnError(error -> logger.error("Error playing track with auto-refresh for user: {}", userId, error));
+    }
+
+    /**
+     * Pause playback with automatic token refresh on failure
+     */
+    public Mono<Void> pausePlaybackWithAutoRefresh(String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                this::pausePlayback)
+                .doOnError(error -> logger.error("Error pausing playback with auto-refresh for user: {}", userId, error));
+    }
+
+    /**
+     * Resume playback with automatic token refresh on failure
+     */
+    public Mono<Void> resumePlaybackWithAutoRefresh(String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                this::resumePlayback)
+                .doOnError(error -> logger.error("Error resuming playback with auto-refresh for user: {}", userId, error));
+    }
+
+    /**
+     * Get current playback with automatic token refresh on failure
+     */
+    public Mono<String> getCurrentPlaybackWithAutoRefresh(String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                this::getCurrentPlayback)
+                .doOnError(error -> logger.error("Error getting playback with auto-refresh for user: {}", userId, error));
+    }
+
+    /**
+     * Get available devices with automatic token refresh on failure
+     */
+    public Mono<String> getAvailableDevicesWithAutoRefresh(String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                this::getAvailableDevices)
+                .doOnError(error -> logger.error("Error getting devices with auto-refresh for user: {}", userId, error));
+    }
+
+    /**
+     * Set volume with automatic token refresh on failure
+     */
+    public Mono<Void> setVolumeWithAutoRefresh(int volumePercent, String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                accessToken -> setVolume(volumePercent, accessToken))
+                .doOnError(error -> logger.error("Error setting volume with auto-refresh for user: {}", userId, error));
+    }
+
+    /**
+     * Transfer playback with automatic token refresh on failure
+     */
+    public Mono<Void> transferPlaybackWithAutoRefresh(String deviceId, String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                accessToken -> transferPlayback(deviceId, accessToken))
+                .doOnError(error -> logger.error("Error transferring playback with auto-refresh for user: {}", userId, error));
+    }
+
+    /**
+     * Get queue with automatic token refresh on failure
+     */
+    public Mono<String> getQueueWithAutoRefresh(String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                this::getQueue)
+                .doOnError(error -> logger.error("Error getting queue with auto-refresh for user: {}", userId, error));
+    }
+
+    /**
+     * Add to queue with automatic token refresh on failure
+     */
+    public Mono<Void> addToQueueWithAutoRefresh(String trackUri, String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                accessToken -> addToQueue(trackUri, accessToken))
+                .doOnError(error -> logger.error("Error adding to queue with auto-refresh for user: {}", userId, error));
+    }
+
+    /**
+     * Skip to next with automatic token refresh on failure
+     */
+    public Mono<Void> skipToNextWithAutoRefresh(String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                this::skipToNext)
+                .doOnError(error -> logger.error("Error skipping to next with auto-refresh for user: {}", userId, error));
+    }
+
+    /**
+     * Skip to previous with automatic token refresh on failure
+     */
+    public Mono<Void> skipToPreviousWithAutoRefresh(String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                this::skipToPrevious)
+                .doOnError(error -> logger.error("Error skipping to previous with auto-refresh for user: {}", userId, error));
     }
 }

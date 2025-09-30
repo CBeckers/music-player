@@ -66,6 +66,41 @@ function AdminPage() {
     }
   };
 
+  const handleRefreshToken = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/admin/refresh-token`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setTokenStatus('✅ ' + data.message + ' New token: ' + data.newTokenPreview);
+      } else {
+        setTokenStatus('❌ ' + (data.error || 'Failed to refresh token'));
+      }
+    } catch (error) {
+      setTokenStatus('❌ Error refreshing token: ' + error);
+    }
+  };
+
+  const handleTestAutoRefresh = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/admin/simulate-refresh`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setTokenStatus('✅ Auto-refresh test: ' + data.message + 
+          (data.tokenChanged ? ' (Token was refreshed!)' : ' (Token still valid)'));
+      } else {
+        setTokenStatus('❌ Test failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      setTokenStatus('❌ Error testing auto-refresh: ' + error);
+    }
+  };
+
   return (
     <div className="admin-page">
       <h1>Admin - Manual Token Setup</h1>
@@ -100,6 +135,12 @@ function AdminPage() {
           </button>
           <button onClick={handleTestToken} className="test-button">
             Test Current Token
+          </button>
+          <button onClick={handleRefreshToken} className="refresh-button">
+            🔄 Refresh Token
+          </button>
+          <button onClick={handleTestAutoRefresh} className="test-auto-refresh-button">
+            🧪 Test Auto-Refresh
           </button>
           <button onClick={handleGetTokenInfo} className="info-button">
             Get Token Info

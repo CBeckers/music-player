@@ -10,6 +10,18 @@ interface PlaybackState {
   };
 }
 
+interface QueueItem {
+  name: string;
+  artists: { name: string }[];
+  uri: string;
+  duration_ms: number;
+}
+
+interface QueueState {
+  currently_playing?: QueueItem;
+  queue: QueueItem[];
+}
+
 interface MusicSidebarProps {
   className?: string;
 }
@@ -17,8 +29,11 @@ interface MusicSidebarProps {
 export function MusicSidebar({ className = '' }: MusicSidebarProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [playbackState, setPlaybackState] = useState<PlaybackState | null>(null);
+  const [queueState, setQueueState] = useState<QueueState | null>(null);
   const [volume, setVolume] = useState(50);
   const [trackUri, setTrackUri] = useState('spotify:track:4uLU6hMCjMI75M1A2tKUQC');
+  const [showQueue, setShowQueue] = useState(false);
+  const [message, setMessage] = useState('');
 
   const backendUrl = 'http://localhost:8080/api/spotify';
 
@@ -33,6 +48,9 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
           
           if (authData.authenticated) {
             refreshPlaybackState();
+            if (showQueue) {
+              refreshQueue();
+            }
           }
         }
       } catch (error) {
@@ -134,6 +152,75 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     }
   };
 
+  const refreshQueue = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/queue`);
+      if (response.ok) {
+        const data = await response.text();
+        if (data) {
+          try {
+            setQueueState(JSON.parse(data));
+          } catch (e) {
+            setQueueState(null);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing queue:', error);
+    }
+  };
+
+  const handleAddToQueue = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/queue/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackUri })
+      });
+      
+      if (response.ok) {
+        refreshQueue();
+        setMessage('✅ Track added to queue!');
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to add track to queue');
+      }
+    } catch (error) {
+      console.error('Error adding to queue:', error);
+    }
+  };
+
+  const handleNext = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/next`, {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        refreshPlaybackState();
+        refreshQueue();
+      }
+    } catch (error) {
+      console.error('Error skipping to next:', error);
+    }
+  };
+
+  const handlePrevious = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/previous`, {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        refreshPlaybackState();
+        refreshQueue();
+      }
+    } catch (error) {
+      console.error('Error skipping to previous:', error);
+    }
+  };
+
   return (
     <div className={`sidebar ${className}`}>
       <h1>🎵 Spotify Player</h1>
@@ -169,6 +256,9 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
       <div className="controls-section">
         <h2>Controls</h2>
         <div className="control-buttons">
+          <button onClick={handlePrevious} className="control-button">
+            ⏮️ Previous
+          </button>
           <button onClick={handlePlay} className="control-button">
             ▶️ Play
           </button>
@@ -177,6 +267,9 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
           </button>
           <button onClick={handleResume} className="control-button">
             ⏯️ Resume
+          </button>
+          <button onClick={handleNext} className="control-button">
+            ⏭️ Next
           </button>
           <button onClick={refreshPlaybackState} className="control-button">
             🔄 Refresh
@@ -193,6 +286,54 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
           placeholder="spotify:track:..."
           className="track-input"
         />
+        <div className="track-buttons">
+          <button onClick={handleAddToQueue} className="control-button" style={{fontSize: '12px'}}>
+            ➕ Add to Queue
+          </button>
+        </div>
+        {message && <div className="message" style={{fontSize: '12px', marginTop: '5px'}}>{message}</div>}
+      </div>
+
+      <div className="queue-section">
+        <div className="queue-header">
+          <h2>Queue</h2>
+          <button 
+            onClick={() => {
+              setShowQueue(!showQueue);
+              if (!showQueue) refreshQueue();
+            }} 
+            className="control-button" 
+            style={{fontSize: '12px', padding: '5px 10px'}}
+          >
+            {showQueue ? '🔼 Hide' : '🔽 Show'}
+          </button>
+        </div>
+        
+        {showQueue && (
+          <div className="queue-content">
+            {queueState ? (
+              <div className="queue-list">
+                {queueState.queue.length > 0 ? (
+                  <ul style={{listStyle: 'none', padding: 0, fontSize: '12px'}}>
+                    {queueState.queue.slice(0, 5).map((track, index) => (
+                      <li key={index} style={{marginBottom: '8px', padding: '5px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '5px'}}>
+                        <strong>{track.name}</strong><br/>
+                        <span style={{color: '#ccc'}}>{track.artists.map(a => a.name).join(', ')}</span>
+                      </li>
+                    ))}
+                    {queueState.queue.length > 5 && (
+                      <li style={{color: '#888', fontSize: '11px'}}>...and {queueState.queue.length - 5} more</li>
+                    )}
+                  </ul>
+                ) : (
+                  <p style={{fontSize: '12px', color: '#888'}}>Queue is empty</p>
+                )}
+              </div>
+            ) : (
+              <p style={{fontSize: '12px', color: '#888'}}>Loading queue...</p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="volume-section">

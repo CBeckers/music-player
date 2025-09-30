@@ -19,6 +19,12 @@ public class TokenStorageService {
         }
     }
     
+    public void storeTokens(String userId, String accessToken, String refreshToken, long expiresInSeconds) {
+        // For retry-on-failure approach, we don't need to track expiration time
+        // Just store the tokens
+        storeTokens(userId, accessToken, refreshToken);
+    }
+    
     public String getAccessToken(String userId) {
         return userTokens.get(userId);
     }

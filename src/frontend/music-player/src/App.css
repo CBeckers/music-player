@@ -308,6 +308,22 @@
   background-color: #45a049;
 }
 
+.refresh-button {
+  background-color: #9c27b0;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin: 5px;
+}
+
+.refresh-button:hover {
+  background-color: #7b1fa2;
+}
+
 .info-button {
   background-color: #2196F3;
   color: white;
@@ -366,4 +382,60 @@
 
 .back-link:hover {
   text-decoration: underline;
+}
+
+/* Queue Section Styles */
+.queue-section {
+  margin: 20px 0;
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.queue-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.queue-content {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.queue-list ul {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.queue-list li {
+  transition: all 0.2s ease;
+}
+
+.queue-list li:hover {
+  background-color: rgba(255,255,255,0.15) !important;
+  transform: translateX(2px);
+}
+
+.track-buttons {
+  margin-top: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.message {
+  color: #4CAF50;
+  font-weight: bold;
+  animation: fadeInOut 3s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; }
+  20%, 80% { opacity: 1; }
 }

@@ -4,6 +4,7 @@ import com.example.music_player.dto.SpotifyTrack;
 import com.example.music_player.service.SpotifyApiService;
 import com.example.music_player.service.SpotifyAuthService;
 import com.example.music_player.service.TokenStorageService;
+import com.example.music_player.service.TokenManagerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -26,11 +27,14 @@ public class SpotifyController {
     private final SpotifyApiService spotifyApiService;
     private final SpotifyAuthService spotifyAuthService;
     private final TokenStorageService tokenStorageService;
+    private final TokenManagerService tokenManagerService;
     
-    public SpotifyController(SpotifyApiService spotifyApiService, SpotifyAuthService spotifyAuthService, TokenStorageService tokenStorageService) {
+    public SpotifyController(SpotifyApiService spotifyApiService, SpotifyAuthService spotifyAuthService, 
+                           TokenStorageService tokenStorageService, TokenManagerService tokenManagerService) {
         this.spotifyApiService = spotifyApiService;
         this.spotifyAuthService = spotifyAuthService;
         this.tokenStorageService = tokenStorageService;
+        this.tokenManagerService = tokenManagerService;
     }
     
     /**
@@ -102,8 +106,11 @@ public class SpotifyController {
         
         return spotifyAuthService.exchangeCodeForToken(code)
                 .map(tokenResponse -> {
-                    // Store tokens in backend for future use
-                    tokenStorageService.storeTokens("default_user", tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
+                    // Store tokens in backend for future use with expiration time
+                    tokenStorageService.storeTokens("default_user", 
+                        tokenResponse.getAccessToken(), 
+                        tokenResponse.getRefreshToken(),
+                        tokenResponse.getExpiresIn());
                     
                     logger.info("Authentication successful for user, redirecting to frontend");
                     
@@ -122,8 +129,7 @@ public class SpotifyController {
      */
     @GetMapping("/auth/status")
     public ResponseEntity<Map<String, Object>> getAuthStatus() {
-        String accessToken = tokenStorageService.getAccessToken("default_user");
-        boolean isAuthenticated = accessToken != null;
+        boolean isAuthenticated = tokenManagerService.isUserAuthenticated("default_user");
         
         Map<String, Object> response = new HashMap<>();
         response.put("authenticated", isAuthenticated);
@@ -183,18 +189,16 @@ public class SpotifyController {
      */
     @GetMapping("/admin/test-token")
     public Mono<ResponseEntity<Map<String, Object>>> testCurrentToken() {
-        String accessToken = tokenStorageService.getAccessToken("default_user");
-        
-        if (accessToken == null) {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
             return Mono.just(ResponseEntity.ok(Map.of(
                 "valid", false,
-                "error", "No token stored"
+                "error", "No token stored or invalid"
             )));
         }
         
-        logger.info("Testing current stored token");
+        logger.info("Testing current stored token with auto-refresh");
         
-        return spotifyApiService.getCurrentPlayback(accessToken)
+        return spotifyApiService.getCurrentPlaybackWithAutoRefresh("default_user")
                 .map(playbackState -> {
                     Map<String, Object> response = new HashMap<>();
                     response.put("valid", true);
@@ -210,6 +214,81 @@ public class SpotifyController {
                     return Mono.just(ResponseEntity.ok(response));
                 });
     }
+
+    /**
+     * Admin endpoint to manually trigger token refresh
+     */
+    @PostMapping("/admin/refresh-token")
+    public Mono<ResponseEntity<Map<String, Object>>> refreshToken() {
+        if (!tokenStorageService.hasToken("default_user")) {
+            return Mono.just(ResponseEntity.ok(Map.of(
+                "success", false,
+                "error", "No token stored"
+            )));
+        }
+        
+        logger.info("Manually triggering token refresh");
+        
+        return tokenManagerService.refreshTokenForUser("default_user")
+                .map(newAccessToken -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", true);
+                    response.put("message", "Token refreshed successfully");
+                    response.put("newTokenPreview", newAccessToken.substring(0, Math.min(10, newAccessToken.length())) + "...");
+                    return ResponseEntity.ok(response);
+                })
+                .onErrorResume(ex -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", false);
+                    response.put("error", "Failed to refresh token");
+                    response.put("details", ex.getMessage());
+                    return Mono.just(ResponseEntity.ok(response));
+                });
+    }
+
+    /**
+     * Admin endpoint to simulate token expiry and test auto-refresh
+     */
+    @PostMapping("/admin/simulate-refresh")
+    public Mono<ResponseEntity<Map<String, Object>>> simulateTokenRefresh() {
+        if (!tokenStorageService.hasToken("default_user")) {
+            return Mono.just(ResponseEntity.ok(Map.of(
+                "success", false,
+                "error", "No token stored"
+            )));
+        }
+        
+        String oldToken = tokenStorageService.getAccessToken("default_user");
+        String oldTokenPreview = oldToken != null ? 
+            oldToken.substring(0, Math.min(10, oldToken.length())) + "..." : "null";
+            
+        logger.info("Simulating token refresh scenario");
+        
+        // Try to get current playback, which will auto-refresh if token is expired
+        return spotifyApiService.getCurrentPlaybackWithAutoRefresh("default_user")
+                .map(playbackState -> {
+                    String newToken = tokenStorageService.getAccessToken("default_user");
+                    String newTokenPreview = newToken != null ? 
+                        newToken.substring(0, Math.min(10, newToken.length())) + "..." : "null";
+                    
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", true);
+                    response.put("message", "API call completed successfully");
+                    response.put("oldTokenPreview", oldTokenPreview);
+                    response.put("newTokenPreview", newTokenPreview);
+                    response.put("tokenChanged", !oldTokenPreview.equals(newTokenPreview));
+                    response.put("hasPlayback", !playbackState.isEmpty());
+                    return ResponseEntity.ok(response);
+                })
+                .onErrorResume(ex -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", false);
+                    response.put("error", "API call failed");
+                    response.put("details", ex.getMessage());
+                    response.put("oldTokenPreview", oldTokenPreview);
+                    return Mono.just(ResponseEntity.ok(response));
+                });
+    }
     
     /**
      * Play a track
@@ -219,21 +298,20 @@ public class SpotifyController {
             @RequestBody Map<String, String> request) {
         
         String trackUri = request.get("trackUri");
-        String accessToken = tokenStorageService.getAccessToken("default_user");
         
         if (trackUri == null) {
             return Mono.just(ResponseEntity.badRequest()
                     .body(Map.of("error", "Missing trackUri")));
         }
         
-        if (accessToken == null) {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Not authenticated - please login first")));
         }
         
         logger.info("Playing track: {}", trackUri);
         
-        return spotifyApiService.playTrack(trackUri, accessToken)
+        return spotifyApiService.playTrackWithAutoRefresh(trackUri, "default_user")
                 .then(Mono.just(ResponseEntity.ok(Map.of("message", "Track playing"))))
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Failed to play track")));
@@ -244,16 +322,14 @@ public class SpotifyController {
      */
     @PostMapping("/pause")
     public Mono<ResponseEntity<Map<String, String>>> pausePlayback() {
-        String accessToken = tokenStorageService.getAccessToken("default_user");
-        
-        if (accessToken == null) {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Not authenticated - please login first")));
         }
         
         logger.info("Pausing playback");
         
-        return spotifyApiService.pausePlayback(accessToken)
+        return spotifyApiService.pausePlaybackWithAutoRefresh("default_user")
                 .then(Mono.just(ResponseEntity.ok(Map.of("message", "Playback paused"))))
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Failed to pause playback")));
@@ -264,16 +340,14 @@ public class SpotifyController {
      */
     @PostMapping("/resume")
     public Mono<ResponseEntity<Map<String, String>>> resumePlayback() {
-        String accessToken = tokenStorageService.getAccessToken("default_user");
-        
-        if (accessToken == null) {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Not authenticated - please login first")));
         }
         
         logger.info("Resuming playback");
         
-        return spotifyApiService.resumePlayback(accessToken)
+        return spotifyApiService.resumePlaybackWithAutoRefresh("default_user")
                 .then(Mono.just(ResponseEntity.ok(Map.of("message", "Playback resumed"))))
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Failed to resume playback")));
@@ -284,16 +358,14 @@ public class SpotifyController {
      */
     @GetMapping("/player")
     public Mono<ResponseEntity<String>> getCurrentPlayback() {
-        String accessToken = tokenStorageService.getAccessToken("default_user");
-        
-        if (accessToken == null) {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Not authenticated - please login first"));
         }
         
         logger.info("Getting current playback state");
         
-        return spotifyApiService.getCurrentPlayback(accessToken)
+        return spotifyApiService.getCurrentPlaybackWithAutoRefresh("default_user")
                 .map(state -> ResponseEntity.ok(state))
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Failed to get playback state"));
@@ -304,16 +376,14 @@ public class SpotifyController {
      */
     @GetMapping("/devices")
     public Mono<ResponseEntity<String>> getAvailableDevices() {
-        String accessToken = tokenStorageService.getAccessToken("default_user");
-        
-        if (accessToken == null) {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Not authenticated - please login first"));
         }
         
         logger.info("Getting available devices");
         
-        return spotifyApiService.getAvailableDevices(accessToken)
+        return spotifyApiService.getAvailableDevicesWithAutoRefresh("default_user")
                 .map(devices -> ResponseEntity.ok(devices))
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Failed to get available devices"));
@@ -327,21 +397,20 @@ public class SpotifyController {
             @RequestBody Map<String, Integer> request) {
         
         Integer volume = request.get("volume");
-        String accessToken = tokenStorageService.getAccessToken("default_user");
         
         if (volume == null) {
             return Mono.just(ResponseEntity.badRequest()
                     .body(Map.of("error", "Missing volume")));
         }
         
-        if (accessToken == null) {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Not authenticated - please login first")));
         }
         
         logger.info("Setting volume to: {}%", volume);
         
-        return spotifyApiService.setVolume(volume, accessToken)
+        return spotifyApiService.setVolumeWithAutoRefresh(volume, "default_user")
                 .then(Mono.just(ResponseEntity.ok(Map.of("message", "Volume set to " + volume + "%"))))
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Failed to set volume")));
@@ -355,24 +424,104 @@ public class SpotifyController {
             @RequestBody Map<String, String> request) {
         
         String deviceId = request.get("deviceId");
-        String accessToken = tokenStorageService.getAccessToken("default_user");
         
         if (deviceId == null) {
             return Mono.just(ResponseEntity.badRequest()
                     .body(Map.of("error", "Missing deviceId")));
         }
         
-        if (accessToken == null) {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Not authenticated - please login first")));
         }
         
         logger.info("Transferring playback to device: {}", deviceId);
         
-        return spotifyApiService.transferPlayback(deviceId, accessToken)
+        return spotifyApiService.transferPlaybackWithAutoRefresh(deviceId, "default_user")
                 .then(Mono.just(ResponseEntity.ok(Map.of("message", "Playback transferred"))))
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Failed to transfer playback")));
+    }
+
+    /**
+     * Get user's playback queue
+     */
+    @GetMapping("/queue")
+    public Mono<ResponseEntity<String>> getQueue() {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Not authenticated - please login first"));
+        }
+        
+        logger.info("Getting user's playback queue");
+        
+        return spotifyApiService.getQueueWithAutoRefresh("default_user")
+                .map(queue -> ResponseEntity.ok(queue))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Failed to get queue"));
+    }
+
+    /**
+     * Add track to playback queue
+     */
+    @PostMapping("/queue/add")
+    public Mono<ResponseEntity<Map<String, String>>> addToQueue(
+            @RequestBody Map<String, String> request) {
+        
+        String trackUri = request.get("trackUri");
+        
+        if (trackUri == null) {
+            return Mono.just(ResponseEntity.badRequest()
+                    .body(Map.of("error", "Missing trackUri")));
+        }
+        
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated - please login first")));
+        }
+        
+        logger.info("Adding track to queue: {}", trackUri);
+        
+        return spotifyApiService.addToQueueWithAutoRefresh(trackUri, "default_user")
+                .then(Mono.just(ResponseEntity.ok(Map.of("message", "Track added to queue"))))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "Failed to add track to queue")));
+    }
+
+    /**
+     * Skip to next track
+     */
+    @PostMapping("/next")
+    public Mono<ResponseEntity<Map<String, String>>> skipToNext() {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated - please login first")));
+        }
+        
+        logger.info("Skipping to next track");
+        
+        return spotifyApiService.skipToNextWithAutoRefresh("default_user")
+                .then(Mono.just(ResponseEntity.ok(Map.of("message", "Skipped to next track"))))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "Failed to skip to next track")));
+    }
+
+    /**
+     * Skip to previous track
+     */
+    @PostMapping("/previous")
+    public Mono<ResponseEntity<Map<String, String>>> skipToPrevious() {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated - please login first")));
+        }
+        
+        logger.info("Skipping to previous track");
+        
+        return spotifyApiService.skipToPreviousWithAutoRefresh("default_user")
+                .then(Mono.just(ResponseEntity.ok(Map.of("message", "Skipped to previous track"))))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "Failed to skip to previous track")));
     }
     
 }
