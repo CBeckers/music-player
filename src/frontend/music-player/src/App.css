@@ -5,38 +5,242 @@
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.app {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.auth-section {
+  text-align: center;
+  padding: 20px;
+  border: 2px solid #1db954;
+  border-radius: 10px;
+  margin: 20px 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.auth-success {
+  color: #1db954;
+  font-weight: bold;
+  padding: 10px;
+  background-color: #e8f5e8;
+  border-radius: 5px;
+  margin: 20px 0;
 }
 
-.card {
-  padding: 2em;
+.auth-warning {
+  color: #ff9800;
+  font-weight: bold;
+  margin: 10px 0;
 }
 
-.read-the-docs {
-  color: #888;
+.auth-button {
+  background-color: #1db954;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin: 10px;
+}
+
+.auth-button:hover {
+  background-color: #1aa34a;
+}
+
+.admin-link {
+  color: #2196F3;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.admin-link:hover {
+  text-decoration: underline;
+}
+
+.player-section, .controls-section, .track-section, .volume-section {
+  margin: 30px 0;
+  padding: 20px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.track-info {
+  text-align: left;
+  padding: 15px;
+  background-color: #e8f5e8;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.control-button {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.control-button:hover {
+  background-color: #1976D2;
+}
+
+.track-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+.volume-section {
+  text-align: center;
+}
+
+.volume-slider {
+  width: 100%;
+  margin: 10px 0;
+}
+
+/* Admin Page Styles */
+.admin-page {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.admin-form {
+  background-color: #f5f5f5;
+  padding: 30px;
+  border-radius: 10px;
+  border: 2px solid #ff9800;
+}
+
+.form-group {
+  margin: 20px 0;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.token-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-family: monospace;
+  resize: vertical;
+}
+
+.set-token-button {
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin: 5px;
+}
+
+.set-token-button:hover {
+  background-color: #f57c00;
+}
+
+.test-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin: 5px;
+}
+
+.test-button:hover {
+  background-color: #45a049;
+}
+
+.info-button {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin: 5px;
+}
+
+.info-button:hover {
+  background-color: #1976D2;
+}
+
+.admin-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.message {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.instructions {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  text-align: left;
+}
+
+.instructions h3 {
+  color: #333;
+}
+
+.instructions ol {
+  padding-left: 20px;
+}
+
+.instructions li {
+  margin: 5px 0;
+}
+
+.back-link {
+  color: #2196F3;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.back-link:hover {
+  text-decoration: underline;
 }
