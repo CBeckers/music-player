@@ -374,7 +374,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
 
   return (
     <div className={`sidebar ${className}`}>
-      <h1>🎵 Music</h1>
+      <h1>🎵 Music 🎵</h1>
       
       {!isAuthenticated && (
         <div className="auth-status">
@@ -411,93 +411,93 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         ) : (
           <p>No track playing</p>
         )}
-      </div>
 
-      <div className="controls-section">
-        <div className="media-controls">
-          <button onClick={handlePrevious} className="media-button media-button-small">
-            ⏮
-          </button>
-          <button 
-            onClick={playbackState?.is_playing ? handlePause : handleResume} 
-            className="media-button media-button-main"
-          >
-            {playbackState?.is_playing ? '⏸' : '▶'}
-          </button>
-          <button onClick={handleNext} className="media-button media-button-small">
-            ⏭
-          </button>
-        </div>
-        <button onClick={refreshPlaybackState} className="refresh-status-button">
-          🔄 Refresh Status
-        </button>
-      </div>
-
-      <div className="track-section">
-        <h2>Add to Queue</h2>
-        <div className="search-input-group">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={handleSearchInputChange}
-            placeholder="Search: artist - song name or paste spotify:track:..."
-            className="track-input"
-          />
-          <button 
-            onClick={handleAddToQueue} 
-            className="add-queue-button"
-            disabled={!trackUri && searchResults.length !== 1}
-            title={
-              trackUri ? 'Add selected track to queue' : 
-              searchResults.length === 1 ? 'Add this track to queue' :
-              searchResults.length > 1 ? 'Select a track first' : 
-              'Search for a track first'
-            }
-          >
-            ➕ Add
-          </button>
-        </div>
-        
-        {isSearching && (
-          <div className="search-loading" style={{fontSize: '12px', color: '#666', marginTop: '5px'}}>
-            🔍 Searching...
+        <div className="controls-section">
+          <div className="media-controls">
+            <button onClick={handlePrevious} className="media-button media-button-small">
+              ⏮
+            </button>
+            <button 
+              onClick={playbackState?.is_playing ? handlePause : handleResume} 
+              className="media-button media-button-main"
+            >
+              {playbackState?.is_playing ? '⏸' : '▶'}
+            </button>
+            <button onClick={handleNext} className="media-button media-button-small">
+              ⏭
+            </button>
           </div>
-        )}
-        
-        {showSearchResults && searchResults.length > 0 && (
-          <div className="search-results">
-            {searchResults.map((track) => (
-              <div 
-                key={track.id} 
-                className="search-result-item"
-                onClick={() => handleSelectTrack(track)}
-              >
-                <div className="search-result-content">
-                  {track.album?.images && (
-                    <img 
-                      src={getAlbumArtUrl(track.album.images) || ''} 
-                      alt={`${track.album.name} album art`}
-                      className="album-art-small"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  )}
-                  <div className="search-result-text">
-                    <div className="track-name">{track.name}</div>
-                    <div className="track-artist">{track.artists.map(a => a.name).join(', ')}</div>
-                    <div className="track-album">{track.album.name}</div>
+          <button onClick={refreshPlaybackState} className="refresh-status-button">
+            🔄 Refresh Status
+          </button>
+        </div>
+
+        <div className="track-section">
+          <h2>Add to Queue</h2>
+          <div className="search-input-group">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              placeholder="Search: artist - song name or paste spotify:track:..."
+              className="track-input"
+            />
+            <button 
+              onClick={handleAddToQueue} 
+              className="add-queue-button"
+              disabled={!trackUri && searchResults.length !== 1}
+              title={
+                trackUri ? 'Add selected track to queue' : 
+                searchResults.length === 1 ? 'Add this track to queue' :
+                searchResults.length > 1 ? 'Select a track first' : 
+                'Search for a track first'
+              }
+            >
+              ➕ Add
+            </button>
+          </div>
+          
+          {isSearching && (
+            <div className="search-loading" style={{fontSize: '12px', color: '#666', marginTop: '5px'}}>
+              🔍 Searching...
+            </div>
+          )}
+          
+          {showSearchResults && searchResults.length > 0 && (
+            <div className="search-results">
+              {searchResults.map((track) => (
+                <div 
+                  key={track.id} 
+                  className="search-result-item"
+                  onClick={() => handleSelectTrack(track)}
+                >
+                  <div className="search-result-content">
+                    {track.album?.images && (
+                      <img 
+                        src={getAlbumArtUrl(track.album.images) || ''} 
+                        alt={`${track.album.name} album art`}
+                        className="album-art-small"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <div className="search-result-text">
+                      <div className="track-name">{track.name}</div>
+                      <div className="track-artist">{track.artists.map(a => a.name).join(', ')}</div>
+                      <div className="track-album">{track.album.name}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+          
+          <div className="search-tips">
+            <small>💡 Type to search songs, or paste a Spotify URI directly</small>
           </div>
-        )}
-        
-        <div className="search-tips">
-          <small>💡 Type to search songs, or paste a Spotify URI directly</small>
+          {message && <div className="message" style={{fontSize: '12px', marginTop: '5px'}}>{message}</div>}
         </div>
-        {message && <div className="message" style={{fontSize: '12px', marginTop: '5px'}}>{message}</div>}
       </div>
 
       <div className="queue-section">
