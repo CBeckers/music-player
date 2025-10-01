@@ -244,7 +244,8 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
 
   const refreshPlaybackState = async () => {
     try {
-      const response = await fetch(`${backendUrl}/player`);
+      // Use cached endpoint for faster updates (no Spotify API delay)
+      const response = await fetch(`${backendUrl}/cached/playback`);
       if (response.ok) {
         const data = await response.text();
         if (data) {
@@ -262,7 +263,8 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
 
   const refreshQueue = async () => {
     try {
-      const response = await fetch(`${backendUrl}/queue`);
+      // Use cached endpoint for faster updates (no Spotify API delay)
+      const response = await fetch(`${backendUrl}/cached/queue`);
       if (response.ok) {
         const data = await response.text();
         if (data) {

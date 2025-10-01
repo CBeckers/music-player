@@ -5,6 +5,8 @@ import com.example.music_player.service.SpotifyApiService;
 import com.example.music_player.service.SpotifyAuthService;
 import com.example.music_player.service.TokenStorageService;
 import com.example.music_player.service.TokenManagerService;
+import com.example.music_player.service.WebSocketBroadcastService;
+import com.example.music_player.service.SpotifyStateCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -31,13 +33,18 @@ public class SpotifyController {
     private final SpotifyAuthService spotifyAuthService;
     private final TokenStorageService tokenStorageService;
     private final TokenManagerService tokenManagerService;
+    private final WebSocketBroadcastService webSocketBroadcastService;
+    private final SpotifyStateCache spotifyStateCache;
     
     public SpotifyController(SpotifyApiService spotifyApiService, SpotifyAuthService spotifyAuthService, 
-                           TokenStorageService tokenStorageService, TokenManagerService tokenManagerService) {
+                           TokenStorageService tokenStorageService, TokenManagerService tokenManagerService,
+                           WebSocketBroadcastService webSocketBroadcastService, SpotifyStateCache spotifyStateCache) {
         this.spotifyApiService = spotifyApiService;
         this.spotifyAuthService = spotifyAuthService;
         this.tokenStorageService = tokenStorageService;
         this.tokenManagerService = tokenManagerService;
+        this.webSocketBroadcastService = webSocketBroadcastService;
+        this.spotifyStateCache = spotifyStateCache;
     }
     
     /**
@@ -567,9 +574,18 @@ public class SpotifyController {
         logger.info("Pausing playback (simple endpoint)");
         
         return spotifyApiService.pausePlaybackWithAutoRefresh("default_user")
+                .then(Mono.fromRunnable(() -> {
+                    // Broadcast the control action to all connected clients
+                    webSocketBroadcastService.broadcastControlAction("pause", "success");
+                    // Trigger a playback state refresh broadcast
+                    refreshAndBroadcastPlaybackState();
+                }))
                 .then(Mono.just(ResponseEntity.ok("OK")))
-                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("ERROR"));
+                .onErrorResume(error -> {
+                    webSocketBroadcastService.broadcastControlAction("pause", "error");
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("ERROR"));
+                });
     }
     
     /**
@@ -585,9 +601,16 @@ public class SpotifyController {
         logger.info("Skipping to next track (simple endpoint)");
         
         return spotifyApiService.skipToNextWithAutoRefresh("default_user")
+                .then(Mono.fromRunnable(() -> {
+                    webSocketBroadcastService.broadcastControlAction("next", "success");
+                    refreshAndBroadcastPlaybackState();
+                }))
                 .then(Mono.just(ResponseEntity.ok("OK")))
-                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("ERROR"));
+                .onErrorResume(error -> {
+                    webSocketBroadcastService.broadcastControlAction("next", "error");
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("ERROR"));
+                });
     }
     
     /**
@@ -634,9 +657,16 @@ public class SpotifyController {
         logger.info("Resuming playback (simple endpoint)");
         
         return spotifyApiService.resumePlaybackWithAutoRefresh("default_user")
+                .then(Mono.fromRunnable(() -> {
+                    webSocketBroadcastService.broadcastControlAction("resume", "success");
+                    refreshAndBroadcastPlaybackState();
+                }))
                 .then(Mono.just(ResponseEntity.ok("OK")))
-                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("ERROR"));
+                .onErrorResume(error -> {
+                    webSocketBroadcastService.broadcastControlAction("resume", "error");
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("ERROR"));
+                });
     }
     
     /**
@@ -715,6 +745,64 @@ public class SpotifyController {
                 .map(playbackState -> ResponseEntity.ok("OK"))
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("ERROR"));
+    }
+    
+    /**
+     * Helper method to refresh and broadcast current playback state
+     */
+    private void refreshAndBroadcastPlaybackState() {
+        try {
+            spotifyApiService.getCurrentPlaybackWithAutoRefresh("default_user")
+                    .subscribe(playbackState -> {
+                        webSocketBroadcastService.broadcastPlaybackUpdate(playbackState);
+                    }, error -> {
+                        logger.warn("Failed to refresh playback state for broadcast: {}", error.getMessage());
+                    });
+        } catch (Exception e) {
+            logger.error("Error in refreshAndBroadcastPlaybackState", e);
+        }
+    }
+    
+    /**
+     * Test endpoint to manually trigger WebSocket broadcast
+     */
+    @GetMapping("/control/test-broadcast")
+    public ResponseEntity<String> testBroadcast() {
+        webSocketBroadcastService.broadcastStatusMessage("🧪 WebSocket test message - " + System.currentTimeMillis());
+        return ResponseEntity.ok("Broadcast sent");
+    }
+    
+    // ==================== CACHED ENDPOINTS ====================
+    // These endpoints return server-cached data for faster updates
+    
+    /**
+     * Get cached current playback state
+     */
+    @GetMapping("/cached/playback")
+    public ResponseEntity<String> getCachedPlayback() {
+        String cached = spotifyStateCache.getCachedPlaybackState();
+        if (cached != null) {
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json")
+                    .body(cached);
+        } else {
+            return ResponseEntity.noContent().build();
+        }
+    }
+    
+    /**
+     * Get cached queue state
+     */
+    @GetMapping("/cached/queue")
+    public ResponseEntity<String> getCachedQueue() {
+        String cached = spotifyStateCache.getCachedQueueState();
+        if (cached != null) {
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json")
+                    .body(cached);
+        } else {
+            return ResponseEntity.noContent().build();
+        }
     }
     
 }
