@@ -46,19 +46,24 @@ export function AdminPanel({ onTokenStatusUpdate, onTestToken }: AdminPanelProps
 
   const handleTestAutoRefresh = async () => {
     try {
-      const response = await fetch(`${backendUrl}/admin/simulate-refresh`, {
-        method: 'POST'
+      const response = await fetch(`${backendUrl}/control/simulate-refresh`, {
+        method: 'GET'
       });
-      const data = await response.json();
+      const responseText = await response.text();
       
-      if (data.success) {
-        onTokenStatusUpdate('✅ Auto-refresh test: ' + data.message + 
-          (data.tokenChanged ? ' (Token was refreshed!)' : ' (Token still valid)'));
+      if (response.ok) {
+        if (responseText === 'OK') {
+          onTokenStatusUpdate('✅ Auto-refresh test completed successfully');
+        } else if (responseText === 'NO_TOKEN') {
+          onTokenStatusUpdate('❌ No token stored');
+        } else {
+          onTokenStatusUpdate('❌ Auto-refresh test failed');
+        }
       } else {
-        onTokenStatusUpdate('❌ Test failed: ' + (data.error || 'Unknown error'));
+        onTokenStatusUpdate('❌ Auto-refresh test failed');
       }
     } catch (error) {
-      onTokenStatusUpdate('❌ Error testing auto-refresh: ' + error);
+      onTokenStatusUpdate('❌ CORS Error - try refreshing page');
     }
   };
 

@@ -699,4 +699,22 @@ public class SpotifyController {
                         .body("ERROR"));
     }
     
+    /**
+     * Simple simulate refresh endpoint for browser compatibility
+     */
+    @GetMapping("/control/simulate-refresh")
+    public Mono<ResponseEntity<String>> simulateRefreshSimple() {
+        if (!tokenStorageService.hasToken("default_user")) {
+            return Mono.just(ResponseEntity.ok("NO_TOKEN"));
+        }
+        
+        logger.info("Simulating token refresh (simple endpoint)");
+        
+        // Try to get current playback, which will auto-refresh if token is expired
+        return spotifyApiService.getCurrentPlaybackWithAutoRefresh("default_user")
+                .map(playbackState -> ResponseEntity.ok("OK"))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("ERROR"));
+    }
+    
 }
