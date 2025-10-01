@@ -116,8 +116,8 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
-  // Light polling every 20 seconds ONLY for external changes (phone, other apps)
-  // WebSocket handles all website control updates instantly
+  // Fast polling every 2 seconds - now safe with cached endpoints (no API limits!)
+  // Server caches Spotify data, so we can poll frequently without rate limits
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -151,7 +151,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
       } catch (error) {
         console.error('Error in light polling:', error);
       }
-    }, 10000); // Check every 10 seconds for external changes
+    }, 2000); // Check every 2 seconds for faster updates
 
     return () => clearInterval(lightPolling);
   }, [isAuthenticated]);
