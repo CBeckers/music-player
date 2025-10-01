@@ -356,44 +356,46 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
 
   return (
     <div className={`sidebar ${className}`}>
-      <h1>🎵 Music 🎵</h1>
-      
-      <AuthStatus 
-        isAuthenticated={isAuthenticated}
-        onLogin={handleLogin}
-      />
-      
-      <NowPlaying playbackState={playbackState} />
-      
-      <PlayerControls
-        playbackState={playbackState}
-        onPause={handlePause}
-        onResume={handleResume}
-        onNext={handleNext}
-        onPrevious={handlePrevious}
-        onRefresh={refreshPlaybackState}
-      />
-      
-      <TrackSearch
-        searchQuery={searchQuery}
-        searchResults={searchResults}
-        isSearching={isSearching}
-        showSearchResults={showSearchResults}
-        trackUri={trackUri}
-        message={message}
-        onSearchChange={handleSearchInputChange}
-        onAddToQueue={handleAddToQueue}
-        onSelectTrack={handleSelectTrack}
-      />
-      
-      <QueueDisplay
-        queueState={queueState}
-        showQueue={showQueue}
-        onToggleQueue={() => {
-          setShowQueue(!showQueue);
-          if (!showQueue) refreshQueue();
-        }}
-      />
+        <h1>🎵 Music 🎵</h1>
+        <div className='player-container'>
+        
+        {/* <AuthStatus 
+          isAuthenticated={isAuthenticated}
+          onLogin={handleLogin}
+        /> */}
+        
+        <NowPlaying playbackState={playbackState} />
+        
+        <PlayerControls
+          playbackState={playbackState}
+          onPause={handlePause}
+          onResume={handleResume}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+          onRefresh={refreshPlaybackState}
+        />
+        
+        <TrackSearch
+          searchQuery={searchQuery}
+          searchResults={searchResults}
+          isSearching={isSearching}
+          showSearchResults={showSearchResults}
+          trackUri={trackUri}
+          message={message}
+          onSearchChange={handleSearchInputChange}
+          onAddToQueue={handleAddToQueue}
+          onSelectTrack={handleSelectTrack}
+        />
+        
+        <QueueDisplay
+          queueState={queueState}
+          showQueue={showQueue}
+          onToggleQueue={() => {
+            setShowQueue(!showQueue);
+            if (!showQueue) refreshQueue();
+          }}
+        />
+      </div>
     </div>
   );
 }

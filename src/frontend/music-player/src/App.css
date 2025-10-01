@@ -22,7 +22,7 @@
 
 .sidebar {
   width: 350px;
-  background: linear-gradient(135deg, #1db954, #191414);
+  background: hsla(222, 22%, 18%, 1);
   color: white;
   padding: 20px;
   overflow-y: auto;
@@ -39,8 +39,9 @@
 .sidebar h1 {
   color: white;
   font-size: 24px;
-  margin-bottom: 30px;
   text-align: center;
+  margin-top: -10px;
+  margin-bottom: 10px;
 }
 
 .auth-status {
@@ -48,14 +49,20 @@
   padding: 15px;
   border-radius: 8px;
   background-color: rgba(255,255,255,0.1);
+  box-shadow: 0px 0px 8px 15px black;
+}
+
+.player-container {
+  box-shadow: 0rem 0rem 0.5rem 0.25rem hsla(0, 100%, 0%, 0.15);
+  width: 100%;
+  border-radius: 8px;
+  background-color: hsla(222, 22%, 20%, 1);
 }
 
 .player-section, .controls-section, .track-section, .volume-section {
   margin: 20px 0;
   padding: 15px;
-  border: 1px solid rgba(255,255,255,0.2);
   border-radius: 8px;
-  background-color: rgba(255,255,255,0.1);
 }
 
 .player-section h2, .controls-section h2, .track-section h2, .volume-section h2 {
@@ -182,14 +189,6 @@
 
 .admin-link:hover {
   text-decoration: underline;
-}
-
-.player-section, .track-section, .volume-section {
-  margin: 30px 0;
-  padding: 20px;
-  border: 1px solid #333;
-  border-radius: 8px;
-  background-color: #f9f9f9;
 }
 
 .controls-section {

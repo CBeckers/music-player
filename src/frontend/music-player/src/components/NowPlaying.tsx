@@ -8,7 +8,7 @@ interface NowPlayingProps {
 export function NowPlaying({ playbackState }: NowPlayingProps) {
   return (
     <div className="player-section">
-      <h2>Now Playing</h2>
+      {/* <h2>Now Playing</h2> */}
       {playbackState?.item ? (
         <div className="track-info">
           <div className="track-display">
