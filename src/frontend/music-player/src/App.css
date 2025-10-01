@@ -74,7 +74,7 @@
 .track-info {
   text-align: left;
   padding: 15px;
-  background-color: rgba(255,255,255,0.2);
+  background-color: hs;
   border-radius: 5px;
   margin: 10px 0;
   color: white;
@@ -201,7 +201,7 @@
 .track-info {
   text-align: left;
   padding: 15px;
-  background-color: #e8f5e8;
+  background-color: black;
   border-radius: 5px;
   margin: 10px 0;
 }
