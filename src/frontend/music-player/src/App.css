@@ -201,7 +201,7 @@
 .track-info {
   text-align: left;
   padding: 15px;
-  background-color: black;
+  background-color: hsla(222, 22%, 13%, 1);
   border-radius: 5px;
   margin: 10px 0;
 }
