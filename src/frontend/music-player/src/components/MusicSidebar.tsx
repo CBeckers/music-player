@@ -116,6 +116,17 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
+  // Auto-refresh playback state every 5 seconds to detect external changes (like phone controls)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      refreshPlaybackState();
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   const handleLogin = () => {
     window.location.href = `${backendUrl}/login`;
   };
