@@ -185,6 +185,21 @@ public class SpotifyController {
     }
 
     /**
+     * Simple endpoint to get raw access token
+     */
+    @GetMapping("/token")
+    public ResponseEntity<Map<String, String>> getAccessToken() {
+        String accessToken = tokenStorageService.getAccessToken("default_user");
+        
+        if (accessToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "No access token available"));
+        }
+        
+        return ResponseEntity.ok(Map.of("access_token", accessToken));
+    }
+
+    /**
      * Admin endpoint to test if current token works
      */
     @GetMapping("/admin/test-token")
