@@ -385,8 +385,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
       });
       
       if (response.ok) {
-        // Longer delay for track changes - Spotify needs time to update
-        delayedRefresh(true, true);
+        // Let server polling detect the track change naturally
         setMessage('⏭️ Next track');
       } else {
         setMessage('❌ Failed to skip');
@@ -416,7 +415,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
           } else if (responseText === 'FORBIDDEN') {
             setMessage('⚠️ Previous track not allowed');
           } else {
-            delayedRefresh(true, true);
+            // Let server polling detect the track change naturally
             setMessage('⏮️ Previous track');
           }
         } else {
@@ -429,8 +428,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         });
         
         if (response.ok) {
-          // Normal delay for restart (just seeking, not changing tracks)
-          delayedRefresh(false, false);
+          // Let server polling detect the position change naturally
           setMessage('⏮️ Restart track');
         } else {
           setMessage('❌ Failed to restart');
