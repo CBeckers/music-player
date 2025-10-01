@@ -1,28 +1,38 @@
 import { useState, useEffect } from 'react';
 
+// Shared interfaces
+interface Artist {
+  name: string;
+}
+
+interface AlbumImage {
+  url: string;
+  height: number;
+  width: number;
+}
+
+interface Album {
+  name: string;
+  images: AlbumImage[];
+}
+
 interface PlaybackState {
   is_playing: boolean;
   progress_ms: number;
   item?: {
     name: string;
-    artists: { name: string }[];
+    artists: Artist[];
     duration_ms: number;
-    album: {
-      name: string;
-      images: Array<{ url: string; height: number; width: number }>;
-    };
+    album: Album;
   };
 }
 
 interface QueueItem {
   name: string;
-  artists: { name: string }[];
+  artists: Artist[];
   uri: string;
   duration_ms: number;
-  album: {
-    name: string;
-    images: Array<{ url: string; height: number; width: number }>;
-  };
+  album: Album;
 }
 
 interface QueueState {
@@ -33,12 +43,9 @@ interface QueueState {
 interface Track {
   id: string;
   name: string;
-  artists: Array<{ name: string }>;
+  artists: Artist[];
   uri: string;
-  album: {
-    name: string;
-    images: Array<{ url: string; height: number; width: number }>;
-  };
+  album: Album;
   duration_ms: number;
 }
 
@@ -50,20 +57,18 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [playbackState, setPlaybackState] = useState<PlaybackState | null>(null);
   const [queueState, setQueueState] = useState<QueueState | null>(null);
-  const [volume, setVolume] = useState(50);
   const [trackUri, setTrackUri] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Track[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
   const [message, setMessage] = useState('');
 
   const backendUrl = 'https://cadebeckers.com/api/spotify';
 
   // Helper function to get album art URL (prefer medium size ~300px)
-  const getAlbumArtUrl = (images: Array<{ url: string; height: number; width: number }>) => {
+  const getAlbumArtUrl = (images: AlbumImage[]) => {
     if (!images || images.length === 0) return null;
     
     // Find medium size image (~300px) or closest
@@ -72,20 +77,6 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     
     // Fallback to largest available
     return images[0]?.url || null;
-  };
-
-  // Helper function to refresh status with delay
-  const delayedRefresh = (includeQueue = false, isTrackChange = false) => {
-    setIsRefreshing(true);
-    // Use longer delay for track changes (skip/previous) since Spotify needs more time
-    const delay = isTrackChange ? 1500 : 800;
-    setTimeout(() => {
-      refreshPlaybackState();
-      if (includeQueue) {
-        refreshQueue();
-      }
-      setIsRefreshing(false);
-    }, delay);
   };
 
   // Check authentication status and get playback state
@@ -174,8 +165,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
       });
       
       if (response.ok) {
-        // Small delay to let Spotify update its state
-        delayedRefresh();
+        // Let server polling detect the change naturally
         setMessage('⏸️ Paused');
       } else {
         // Revert optimistic update on failure
@@ -206,8 +196,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
       });
       
       if (response.ok) {
-        // Small delay to let Spotify update its state
-        delayedRefresh();
+        // Let server polling detect the change naturally
         setMessage('▶️ Playing');
       } else {
         // Revert optimistic update on failure
@@ -223,24 +212,6 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         setPlaybackState({ ...playbackState, is_playing: false });
       }
       setMessage('❌ CORS Error - try refreshing page');
-    }
-  };
-
-  const handleVolumeChange = async (newVolume: number) => {
-    try {
-      const response = await fetch(`${backendUrl}/volume`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ volume: newVolume })
-      });
-      
-      if (response.ok) {
-        setVolume(newVolume);
-        // Small delay to let Spotify update its state
-        delayedRefresh();
-      }
-    } catch (error) {
-      console.error('Error setting volume:', error);
     }
   };
 
@@ -304,9 +275,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         setSearchResults([]);
         setShowSearchResults(false);
         
-        // Small delay to let Spotify update its state
-        delayedRefresh(true);
-        
+        // Let server polling detect the queue change naturally
         setTimeout(() => setMessage(''), 3000);
       } else {
         setMessage('❌ Failed to add track to queue');
@@ -456,10 +425,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
       )}
       
       <div className="player-section">
-        <h2>
-          Now Playing 
-          {isRefreshing && <span className="refreshing-indicator" style={{fontSize: '12px', color: '#999'}}>🔄</span>}
-        </h2>
+        <h2>Now Playing</h2>
         {playbackState?.item ? (
           <div className="track-info">
             <div className="track-display">
