@@ -518,9 +518,7 @@
   align-items: center;
   justify-content: center;
   gap: 15px;
-  margin: 20px 0;
-  padding: 15px;
-  background: rgba(0, 0, 0, 0.3);
+  background: hsla(222, 22%, 23%, 1);
   border-radius: 50px;
   backdrop-filter: blur(10px);
 }
