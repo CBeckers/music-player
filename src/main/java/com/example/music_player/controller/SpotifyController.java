@@ -130,11 +130,20 @@ public class SpotifyController {
     @GetMapping("/auth/status")
     public ResponseEntity<Map<String, Object>> getAuthStatus() {
         boolean isAuthenticated = tokenManagerService.isUserAuthenticated("default_user");
+        String accessToken = tokenStorageService.getAccessToken("default_user");
+        String refreshToken = tokenStorageService.getRefreshToken("default_user");
         
         Map<String, Object> response = new HashMap<>();
         response.put("authenticated", isAuthenticated);
+        response.put("hasAccessToken", accessToken != null);
+        response.put("hasRefreshToken", refreshToken != null);
         
-        logger.info("Auth status check: {}", isAuthenticated);
+        if (accessToken != null) {
+            response.put("accessTokenPreview", accessToken.substring(0, Math.min(20, accessToken.length())) + "...");
+        }
+        
+        logger.info("Auth status check: authenticated={}, hasAccessToken={}, hasRefreshToken={}", 
+                   isAuthenticated, accessToken != null, refreshToken != null);
         return ResponseEntity.ok(response);
     }
 
