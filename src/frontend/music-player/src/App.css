@@ -601,8 +601,8 @@
 
 /* Album Art Styles */
 .album-art-large {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   border-radius: 8px;
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
