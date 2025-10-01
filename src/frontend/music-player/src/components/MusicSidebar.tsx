@@ -1,53 +1,10 @@
 import { useState, useEffect } from 'react';
-
-// Shared interfaces
-interface Artist {
-  name: string;
-}
-
-interface AlbumImage {
-  url: string;
-  height: number;
-  width: number;
-}
-
-interface Album {
-  name: string;
-  images: AlbumImage[];
-}
-
-interface PlaybackState {
-  is_playing: boolean;
-  progress_ms: number;
-  item?: {
-    name: string;
-    artists: Artist[];
-    duration_ms: number;
-    album: Album;
-  };
-}
-
-interface QueueItem {
-  name: string;
-  artists: Artist[];
-  uri: string;
-  duration_ms: number;
-  album: Album;
-}
-
-interface QueueState {
-  currently_playing?: QueueItem;
-  queue: QueueItem[];
-}
-
-interface Track {
-  id: string;
-  name: string;
-  artists: Artist[];
-  uri: string;
-  album: Album;
-  duration_ms: number;
-}
+import type { PlaybackState, QueueState, Track } from './shared/types';
+import { NowPlaying } from './NowPlaying';
+import { PlayerControls } from './PlayerControls';
+import { TrackSearch } from './TrackSearch';
+import { QueueDisplay } from './QueueDisplay';
+import { AuthStatus } from './AuthStatus';
 
 interface MusicSidebarProps {
   className?: string;
@@ -66,18 +23,6 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
   const [message, setMessage] = useState('');
 
   const backendUrl = 'https://cadebeckers.com/api/spotify';
-
-  // Helper function to get album art URL (prefer medium size ~300px)
-  const getAlbumArtUrl = (images: AlbumImage[]) => {
-    if (!images || images.length === 0) return null;
-    
-    // Find medium size image (~300px) or closest
-    const mediumImage = images.find(img => img.height >= 250 && img.height <= 350);
-    if (mediumImage) return mediumImage.url;
-    
-    // Fallback to largest available
-    return images[0]?.url || null;
-  };
 
   // Check authentication status and get playback state
   useEffect(() => {
@@ -413,194 +358,42 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     <div className={`sidebar ${className}`}>
       <h1>🎵 Music 🎵</h1>
       
-      {!isAuthenticated && (
-        <div className="auth-status">
-          <div className="auth-section">
-            <p className="auth-warning">⚠️ Not authenticated</p>
-            <button onClick={handleLogin} className="auth-button">
-              Login with Spotify
-            </button>
-          </div>
-        </div>
-      )}
+      <AuthStatus 
+        isAuthenticated={isAuthenticated}
+        onLogin={handleLogin}
+      />
       
-      <div className="player-section">
-        <h2>Now Playing</h2>
-        {playbackState?.item ? (
-          <div className="track-info">
-            <div className="track-display">
-              {playbackState.item.album?.images && (
-                <img 
-                  src={getAlbumArtUrl(playbackState.item.album.images) || ''} 
-                  alt={`${playbackState.item.album.name} album art`}
-                  className="album-art-large"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              )}
-              <div className="track-details">
-                <p><strong>{playbackState.item.name}</strong></p>
-                <p>{playbackState.item.artists.map(a => a.name).join(', ')}</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p>No track playing</p>
-        )}
-
-        <div className="controls-section">
-          <div className="media-controls">
-            <button onClick={handlePrevious} className="media-button media-button-small">
-              ⏮
-            </button>
-            <button 
-              onClick={playbackState?.is_playing ? handlePause : handleResume} 
-              className="media-button media-button-main"
-            >
-              {playbackState?.is_playing ? '⏸' : '▶'}
-            </button>
-            <button onClick={handleNext} className="media-button media-button-small">
-              ⏭
-            </button>
-          </div>
-          <button onClick={refreshPlaybackState} className="refresh-status-button">
-            🔄 Refresh Status
-          </button>
-        </div>
-
-        <div className="track-section">
-          <h2>Add to Queue</h2>
-          <div className="search-input-group">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-              placeholder="Search: artist - song name or paste spotify:track:..."
-              className="track-input"
-            />
-            <button 
-              onClick={handleAddToQueue} 
-              className="add-queue-button"
-              disabled={!trackUri && searchResults.length !== 1}
-              title={
-                trackUri ? 'Add selected track to queue' : 
-                searchResults.length === 1 ? 'Add this track to queue' :
-                searchResults.length > 1 ? 'Select a track first' : 
-                'Search for a track first'
-              }
-            >
-              ➕ Add
-            </button>
-          </div>
-          
-          {isSearching && (
-            <div className="search-loading" style={{fontSize: '12px', color: '#666', marginTop: '5px'}}>
-              🔍 Searching...
-            </div>
-          )}
-          
-          {showSearchResults && searchResults.length > 0 && (
-            <div className="search-results">
-              {searchResults.map((track) => (
-                <div 
-                  key={track.id} 
-                  className="search-result-item"
-                  onClick={() => handleSelectTrack(track)}
-                >
-                  <div className="search-result-content">
-                    {track.album?.images && (
-                      <img 
-                        src={getAlbumArtUrl(track.album.images) || ''} 
-                        alt={`${track.album.name} album art`}
-                        className="album-art-small"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    )}
-                    <div className="search-result-text">
-                      <div className="track-name">{track.name}</div>
-                      <div className="track-artist">{track.artists.map(a => a.name).join(', ')}</div>
-                      <div className="track-album">{track.album.name}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {message && <div className="message" style={{fontSize: '12px', marginTop: '5px'}}>{message}</div>}
-        </div>
-      </div>
-
-      <div className="queue-section">
-        <div className="queue-header">
-          <h2>Queue</h2>
-          <button 
-            onClick={() => {
-              setShowQueue(!showQueue);
-              if (!showQueue) refreshQueue();
-            }} 
-            className="control-button" 
-            style={{fontSize: '12px', padding: '5px 10px'}}
-          >
-            {showQueue ? '🔼 Hide' : '🔽 Show'}
-          </button>
-        </div>
-        
-        {showQueue && (
-          <div className="queue-content">
-            {queueState ? (
-              <div className="queue-list">
-                {queueState.queue.length > 0 ? (
-                  <ul style={{listStyle: 'none', padding: 0, fontSize: '12px'}}>
-                    {queueState.queue.slice(0, 5).map((track, index) => (
-                      <li key={index} className="queue-item">
-                        <div className="queue-item-content">
-                          {track.album?.images && (
-                            <img 
-                              src={getAlbumArtUrl(track.album.images) || ''} 
-                              alt={`${track.album.name} album art`}
-                              className="album-art-tiny"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          )}
-                          <div className="queue-item-text">
-                            <div className="queue-track-name">{track.name}</div>
-                            <div className="queue-track-artist">{track.artists.map(a => a.name).join(', ')}</div>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                    {queueState.queue.length > 5 && (
-                      <li style={{color: '#888', fontSize: '11px'}}>...and {queueState.queue.length - 5} more</li>
-                    )}
-                  </ul>
-                ) : (
-                  <p style={{fontSize: '12px', color: '#888'}}>Queue is empty</p>
-                )}
-              </div>
-            ) : (
-              <p style={{fontSize: '12px', color: '#888'}}>Loading queue...</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* <div className="volume-section">
-        <h2>Volume</h2>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={volume}
-          onChange={(e) => handleVolumeChange(parseInt(e.target.value))}
-          className="volume-slider"
-        />
-        <span>{volume}%</span>
-      </div> */}
+      <NowPlaying playbackState={playbackState} />
+      
+      <PlayerControls
+        playbackState={playbackState}
+        onPause={handlePause}
+        onResume={handleResume}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+        onRefresh={refreshPlaybackState}
+      />
+      
+      <TrackSearch
+        searchQuery={searchQuery}
+        searchResults={searchResults}
+        isSearching={isSearching}
+        showSearchResults={showSearchResults}
+        trackUri={trackUri}
+        message={message}
+        onSearchChange={handleSearchInputChange}
+        onAddToQueue={handleAddToQueue}
+        onSelectTrack={handleSelectTrack}
+      />
+      
+      <QueueDisplay
+        queueState={queueState}
+        showQueue={showQueue}
+        onToggleQueue={() => {
+          setShowQueue(!showQueue);
+          if (!showQueue) refreshQueue();
+        }}
+      />
     </div>
   );
 }
