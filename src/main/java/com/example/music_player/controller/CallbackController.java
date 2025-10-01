@@ -1,40 +1,41 @@
 package com.example.music_player.controller;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
+@CrossOrigin(origins = "*")
 public class CallbackController {
 
+    /**
+     * Handle Spotify OAuth callback at root level (matches redirect URI)
+     * Redirects to the actual API endpoint for processing
+     */
     @GetMapping("/callback")
-    @ResponseBody
-    public String handleCallback(@RequestParam(required = false) String code, 
+    public ResponseEntity<Void> handleCallback(@RequestParam(required = false) String code, 
                                @RequestParam(required = false) String state,
                                @RequestParam(required = false) String error) {
         
         if (error != null) {
-            return String.format("<h1>❌ Authorization Error</h1><p>Error: %s</p>", error);
+            // Redirect to frontend with error
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", "https://cadebeckers.com/?error=" + error)
+                    .build();
         }
         
-        if (code != null) {
-            return String.format(
-                "<h1>✅ Authorization Successful!</h1>" +
-                "<p><strong>Authorization Code:</strong> %s</p>" +
-                "<p><strong>State:</strong> %s</p>" +
-                "<p>You can now use this code to get an access token and test music playback!</p>" +
-                "<hr>" +
-                "<p><strong>Next Steps:</strong></p>" +
-                "<ol>" +
-                "<li>Copy the authorization code above</li>" +
-                "<li>Use it to get an access token</li>" +
-                "<li>Test the music playback endpoints</li>" +
-                "</ol>", 
-                code, state
-            );
+        if (code != null && state != null) {
+            // Redirect to the actual API callback endpoint for token processing
+            String redirectUrl = "/api/spotify/callback?code=" + code + "&state=" + state;
+            
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", redirectUrl)
+                    .build();
         }
         
-        return "<h1>❌ No authorization code received</h1>";
+        // No code or state - redirect to home with error
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", "https://cadebeckers.com/?error=missing_params")
+                .build();
     }
 }
