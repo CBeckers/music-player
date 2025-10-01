@@ -604,8 +604,21 @@ public class SpotifyController {
         
         return spotifyApiService.skipToPreviousWithAutoRefresh("default_user")
                 .then(Mono.just(ResponseEntity.ok("OK")))
-                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("ERROR"));
+                .onErrorResume(error -> {
+                    logger.error("Error skipping to previous track: {}", error.getMessage());
+                    // Return a more specific error message
+                    String errorMsg = error.getMessage();
+                    if (errorMsg != null && errorMsg.contains("403")) {
+                        return Mono.just(ResponseEntity.status(HttpStatus.OK)
+                                .body("FORBIDDEN")); // Spotify restriction
+                    } else if (errorMsg != null && errorMsg.contains("404")) {
+                        return Mono.just(ResponseEntity.status(HttpStatus.OK)
+                                .body("NO_PREVIOUS")); // No previous track
+                    } else {
+                        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body("ERROR"));
+                    }
+                });
     }
     
     /**
@@ -665,6 +678,23 @@ public class SpotifyController {
         
         return spotifyApiService.seekToPositionWithAutoRefresh(position, "default_user")
                 .then(Mono.just(ResponseEntity.ok("OK")))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("ERROR"));
+    }
+    
+    /**
+     * Simple refresh token endpoint for browser compatibility
+     */
+    @GetMapping("/control/refresh-token")
+    public Mono<ResponseEntity<String>> refreshTokenSimple() {
+        if (!tokenStorageService.hasToken("default_user")) {
+            return Mono.just(ResponseEntity.ok("NO_TOKEN"));
+        }
+        
+        logger.info("Refreshing token (simple endpoint)");
+        
+        return tokenManagerService.refreshTokenForUser("default_user")
+                .map(newAccessToken -> ResponseEntity.ok("OK"))
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("ERROR"));
     }

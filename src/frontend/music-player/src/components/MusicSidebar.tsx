@@ -366,8 +366,15 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         });
         
         if (response.ok) {
-          delayedRefresh(true);
-          setMessage('⏮️ Previous track');
+          const responseText = await response.text();
+          if (responseText === 'NO_PREVIOUS') {
+            setMessage('⏸️ No previous track available');
+          } else if (responseText === 'FORBIDDEN') {
+            setMessage('⚠️ Previous track not allowed');
+          } else {
+            delayedRefresh(true);
+            setMessage('⏮️ Previous track');
+          }
         } else {
           setMessage('❌ Failed to go back');
         }

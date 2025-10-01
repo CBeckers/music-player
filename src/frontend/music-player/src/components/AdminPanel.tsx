@@ -23,18 +23,24 @@ export function AdminPanel({ onTokenStatusUpdate, onTestToken }: AdminPanelProps
 
   const handleRefreshToken = async () => {
     try {
-      const response = await fetch(`${backendUrl}/admin/refresh-token`, {
-        method: 'POST'
+      const response = await fetch(`${backendUrl}/control/refresh-token`, {
+        method: 'GET'
       });
-      const data = await response.json();
+      const responseText = await response.text();
       
-      if (data.success) {
-        onTokenStatusUpdate('✅ ' + data.message + ' New token: ' + data.newTokenPreview);
+      if (response.ok) {
+        if (responseText === 'OK') {
+          onTokenStatusUpdate('✅ Token refreshed successfully');
+        } else if (responseText === 'NO_TOKEN') {
+          onTokenStatusUpdate('❌ No token stored');
+        } else {
+          onTokenStatusUpdate('❌ Failed to refresh token');
+        }
       } else {
-        onTokenStatusUpdate('❌ ' + (data.error || 'Failed to refresh token'));
+        onTokenStatusUpdate('❌ Failed to refresh token');
       }
     } catch (error) {
-      onTokenStatusUpdate('❌ Error refreshing token: ' + error);
+      onTokenStatusUpdate('❌ CORS Error - try refreshing page');
     }
   };
 
