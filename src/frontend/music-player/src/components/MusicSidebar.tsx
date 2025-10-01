@@ -374,22 +374,18 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
 
   return (
     <div className={`sidebar ${className}`}>
-      <h1>🎵 Spotify Player</h1>
+      <h1>🎵 Music</h1>
       
-      <div className="auth-status">
-        {isAuthenticated ? (
-          <p className="auth-success">✅ Ready!</p>
-        ) : (
+      {!isAuthenticated && (
+        <div className="auth-status">
           <div className="auth-section">
             <p className="auth-warning">⚠️ Not authenticated</p>
             <button onClick={handleLogin} className="auth-button">
               Login with Spotify
             </button>
-            <p>or</p>
-            <a href="/admin" className="admin-link">Admin Panel</a>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       
       <div className="player-section">
         <h2>Now Playing {isRefreshing && <span className="refreshing-indicator" style={{fontSize: '12px', color: '#999'}}>🔄</span>}</h2>
