@@ -72,6 +72,10 @@
   margin-bottom: 15px;
 }
 
+.player-section {
+  padding-top: 1px;
+}
+
 .track-info {
   text-align: left;
   padding: 15px;
