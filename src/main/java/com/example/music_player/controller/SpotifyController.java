@@ -550,5 +550,80 @@ public class SpotifyController {
                 .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Failed to skip to previous track")));
     }
+
+    // ============== CORS WORKAROUND ENDPOINTS ===============
+    // These endpoints provide simple, browser-friendly responses to avoid CORS issues
+    
+    /**
+     * Simple pause endpoint for browser compatibility
+     */
+    @GetMapping("/control/pause")
+    public Mono<ResponseEntity<String>> pausePlaybackSimple() {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Not authenticated"));
+        }
+        
+        logger.info("Pausing playback (simple endpoint)");
+        
+        return spotifyApiService.pausePlaybackWithAutoRefresh("default_user")
+                .then(Mono.just(ResponseEntity.ok("OK")))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("ERROR"));
+    }
+    
+    /**
+     * Simple next track endpoint for browser compatibility
+     */
+    @GetMapping("/control/next")
+    public Mono<ResponseEntity<String>> skipToNextSimple() {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Not authenticated"));
+        }
+        
+        logger.info("Skipping to next track (simple endpoint)");
+        
+        return spotifyApiService.skipToNextWithAutoRefresh("default_user")
+                .then(Mono.just(ResponseEntity.ok("OK")))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("ERROR"));
+    }
+    
+    /**
+     * Simple previous track endpoint for browser compatibility
+     */
+    @GetMapping("/control/previous")  
+    public Mono<ResponseEntity<String>> skipToPreviousSimple() {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Not authenticated"));
+        }
+        
+        logger.info("Skipping to previous track (simple endpoint)");
+        
+        return spotifyApiService.skipToPreviousWithAutoRefresh("default_user")
+                .then(Mono.just(ResponseEntity.ok("OK")))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("ERROR"));
+    }
+    
+    /**
+     * Simple resume endpoint for browser compatibility
+     */
+    @GetMapping("/control/resume")
+    public Mono<ResponseEntity<String>> resumePlaybackSimple() {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Not authenticated"));
+        }
+        
+        logger.info("Resuming playback (simple endpoint)");
+        
+        return spotifyApiService.resumePlaybackWithAutoRefresh("default_user")
+                .then(Mono.just(ResponseEntity.ok("OK")))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("ERROR"));
+    }
     
 }

@@ -127,18 +127,20 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     }
     
     try {
-      const response = await fetch(`${backendUrl}/pause`, {
-        method: 'POST'
+      const response = await fetch(`${backendUrl}/control/pause`, {
+        method: 'GET'
       });
       
       if (response.ok) {
         // Small delay to let Spotify update its state
         delayedRefresh();
+        setMessage('⏸️ Paused');
       } else {
         // Revert optimistic update on failure
         if (playbackState) {
           setPlaybackState({ ...playbackState, is_playing: true });
         }
+        setMessage('❌ Failed to pause');
       }
     } catch (error) {
       console.error('Error pausing:', error);
@@ -146,6 +148,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
       if (playbackState) {
         setPlaybackState({ ...playbackState, is_playing: true });
       }
+      setMessage('❌ CORS Error - try refreshing page');
     }
   };
 
@@ -156,18 +159,20 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     }
     
     try {
-      const response = await fetch(`${backendUrl}/resume`, {
-        method: 'POST'
+      const response = await fetch(`${backendUrl}/control/resume`, {
+        method: 'GET'
       });
       
       if (response.ok) {
         // Small delay to let Spotify update its state
         delayedRefresh();
+        setMessage('▶️ Playing');
       } else {
         // Revert optimistic update on failure
         if (playbackState) {
           setPlaybackState({ ...playbackState, is_playing: false });
         }
+        setMessage('❌ Failed to resume');
       }
     } catch (error) {
       console.error('Error resuming:', error);
@@ -175,6 +180,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
       if (playbackState) {
         setPlaybackState({ ...playbackState, is_playing: false });
       }
+      setMessage('❌ CORS Error - try refreshing page');
     }
   };
 
@@ -329,31 +335,39 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
 
   const handleNext = async () => {
     try {
-      const response = await fetch(`${backendUrl}/next`, {
-        method: 'POST'
+      const response = await fetch(`${backendUrl}/control/next`, {
+        method: 'GET'
       });
       
       if (response.ok) {
         // Small delay to let Spotify update its state
         delayedRefresh(true);
+        setMessage('⏭️ Next track');
+      } else {
+        setMessage('❌ Failed to skip');
       }
     } catch (error) {
       console.error('Error skipping to next:', error);
+      setMessage('❌ CORS Error - try refreshing page');
     }
   };
 
   const handlePrevious = async () => {
     try {
-      const response = await fetch(`${backendUrl}/previous`, {
-        method: 'POST'
+      const response = await fetch(`${backendUrl}/control/previous`, {
+        method: 'GET'
       });
       
       if (response.ok) {
         // Small delay to let Spotify update its state
         delayedRefresh(true);
+        setMessage('⏮️ Previous track');
+      } else {
+        setMessage('❌ Failed to go back');
       }
     } catch (error) {
       console.error('Error skipping to previous:', error);
+      setMessage('❌ CORS Error - try refreshing page');
     }
   };
 
