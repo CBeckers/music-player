@@ -359,10 +359,10 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         <h1>🎵 Music 🎵</h1>
         <div className='player-container'>
         
-        {/* <AuthStatus 
+        <AuthStatus 
           isAuthenticated={isAuthenticated}
           onLogin={handleLogin}
-        /> */}
+        />
         
         <NowPlaying playbackState={playbackState} />
         
