@@ -98,7 +98,7 @@ public class SpotifyAuthService {
      * Get authorization URL for user login
      */
     public String getAuthorizationUrl(String state) {
-        String scopes = "user-read-playback-state user-modify-playback-state user-read-currently-playing streaming user-read-email user-read-private";
+        String scopes = "user-read-playback-state user-modify-playback-state user-read-currently-playing";
         
         return spotifyConfig.getAuthorizeUrl() + 
                "?response_type=code" +
