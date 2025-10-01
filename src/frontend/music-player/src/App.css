@@ -61,7 +61,8 @@
 
 .player-section, .controls-section, .track-section, .volume-section {
   margin: 20px 0;
-  padding: 15px;
+  padding-left: 15px;
+  padding-right: 15px;
   border-radius: 8px;
 }
 
@@ -196,7 +197,6 @@
   padding: 20px;
   border-radius: 8px;
   text-align: center;
-  margin-top: -50px;
 }
 
 .track-info {

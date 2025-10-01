@@ -33,9 +33,9 @@ export function PlayerControls({
           ⏭
         </button>
       </div>
-      <button onClick={onRefresh} className="refresh-status-button">
+      {/* <button onClick={onRefresh} className="refresh-status-button">
         🔄 Refresh Status
-      </button>
+      </button> */}
     </div>
   );
 }
