@@ -75,15 +75,17 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
   };
 
   // Helper function to refresh status with delay
-  const delayedRefresh = (includeQueue = false) => {
+  const delayedRefresh = (includeQueue = false, isTrackChange = false) => {
     setIsRefreshing(true);
+    // Use longer delay for track changes (skip/previous) since Spotify needs more time
+    const delay = isTrackChange ? 1500 : 800;
     setTimeout(() => {
       refreshPlaybackState();
       if (includeQueue) {
         refreshQueue();
       }
       setIsRefreshing(false);
-    }, 800);
+    }, delay);
   };
 
   // Check authentication status and get playback state
@@ -383,8 +385,8 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
       });
       
       if (response.ok) {
-        // Small delay to let Spotify update its state
-        delayedRefresh(true);
+        // Longer delay for track changes - Spotify needs time to update
+        delayedRefresh(true, true);
         setMessage('⏭️ Next track');
       } else {
         setMessage('❌ Failed to skip');
@@ -414,7 +416,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
           } else if (responseText === 'FORBIDDEN') {
             setMessage('⚠️ Previous track not allowed');
           } else {
-            delayedRefresh(true);
+            delayedRefresh(true, true);
             setMessage('⏮️ Previous track');
           }
         } else {
@@ -427,7 +429,8 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         });
         
         if (response.ok) {
-          delayedRefresh(false);
+          // Normal delay for restart (just seeking, not changing tracks)
+          delayedRefresh(false, false);
           setMessage('⏮️ Restart track');
         } else {
           setMessage('❌ Failed to restart');
