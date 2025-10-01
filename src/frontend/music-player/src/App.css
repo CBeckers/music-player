@@ -525,8 +525,10 @@
   justify-content: center;
   gap: 15px;
   background: hsla(222, 22%, 23%, 1);
+  border-radius: 50px;
   backdrop-filter: blur(10px);
-  width: 100%;
+  width: 75%;
+  margin: 0 auto;
 }
 
 .media-button {
