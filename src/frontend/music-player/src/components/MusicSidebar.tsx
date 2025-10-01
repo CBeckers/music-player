@@ -355,19 +355,37 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
 
   const handlePrevious = async () => {
     try {
-      const response = await fetch(`${backendUrl}/control/previous`, {
-        method: 'GET'
-      });
+      // Check if we have playback state and current progress
+      const currentProgress = playbackState?.progress_ms || 0;
+      const tenSecondsInMs = 10000;
       
-      if (response.ok) {
-        // Small delay to let Spotify update its state
-        delayedRefresh(true);
-        setMessage('⏮️ Previous track');
+      if (currentProgress < tenSecondsInMs) {
+        // Less than 10 seconds: go to previous track
+        const response = await fetch(`${backendUrl}/control/previous`, {
+          method: 'GET'
+        });
+        
+        if (response.ok) {
+          delayedRefresh(true);
+          setMessage('⏮️ Previous track');
+        } else {
+          setMessage('❌ Failed to go back');
+        }
       } else {
-        setMessage('❌ Failed to go back');
+        // 10 seconds or more: restart current track (seek to beginning)
+        const response = await fetch(`${backendUrl}/control/seek?position=0`, {
+          method: 'GET'
+        });
+        
+        if (response.ok) {
+          delayedRefresh(false);
+          setMessage('⏮️ Restart track');
+        } else {
+          setMessage('❌ Failed to restart');
+        }
       }
     } catch (error) {
-      console.error('Error skipping to previous:', error);
+      console.error('Error with previous/restart:', error);
       setMessage('❌ CORS Error - try refreshing page');
     }
   };
@@ -492,10 +510,6 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
               ))}
             </div>
           )}
-          
-          <div className="search-tips">
-            <small>💡 Type to search songs, or paste a Spotify URI directly</small>
-          </div>
           {message && <div className="message" style={{fontSize: '12px', marginTop: '5px'}}>{message}</div>}
         </div>
       </div>

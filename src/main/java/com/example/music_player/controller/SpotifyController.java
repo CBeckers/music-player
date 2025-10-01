@@ -650,4 +650,23 @@ public class SpotifyController {
                         .body("ERROR"));
     }
     
+    /**
+     * Simple seek endpoint for browser compatibility
+     * Usage: /control/seek?position=0 (position in milliseconds)
+     */
+    @GetMapping("/control/seek")
+    public Mono<ResponseEntity<String>> seekToPositionSimple(@RequestParam int position) {
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Not authenticated"));
+        }
+        
+        logger.info("Seeking to position (simple endpoint): {}ms", position);
+        
+        return spotifyApiService.seekToPositionWithAutoRefresh(position, "default_user")
+                .then(Mono.just(ResponseEntity.ok("OK")))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("ERROR"));
+    }
+    
 }

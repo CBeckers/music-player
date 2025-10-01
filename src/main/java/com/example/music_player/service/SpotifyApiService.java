@@ -352,4 +352,31 @@ public class SpotifyApiService {
                 this::skipToPrevious)
                 .doOnError(error -> logger.error("Error skipping to previous with auto-refresh for user: {}", userId, error));
     }
+    
+    /**
+     * Seek to a specific position in the currently playing track
+     */
+    public Mono<Void> seekToPosition(int positionMs, String accessToken) {
+        logger.info("Seeking to position {}ms", positionMs);
+        
+        return webClient.put()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/me/player/seek")
+                        .queryParam("position_ms", positionMs)
+                        .build())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .doOnSuccess(response -> logger.info("Successfully seeked to position {}ms", positionMs))
+                .doOnError(error -> logger.error("Error seeking to position {}ms: {}", positionMs, error.getMessage()));
+    }
+    
+    /**
+     * Seek to a specific position with auto token refresh
+     */
+    public Mono<Void> seekToPositionWithAutoRefresh(int positionMs, String userId) {
+        return tokenManagerService.retryWithTokenRefresh(userId, 
+                token -> seekToPosition(positionMs, token))
+                .doOnError(error -> logger.error("Error seeking to position with auto-refresh for user: {}", userId, error));
+    }
 }
