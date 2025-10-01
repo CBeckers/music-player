@@ -5,7 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"https://cadebeckers.com", "https://www.cadebeckers.com", "http://localhost:5173"}, 
+             allowedHeaders = "*",
+             allowCredentials = "true")
 public class CallbackController {
 
     /**

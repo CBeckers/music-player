@@ -19,7 +19,10 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/spotify")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"https://cadebeckers.com", "https://www.cadebeckers.com", "http://localhost:5173"}, 
+             methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS},
+             allowedHeaders = "*",
+             allowCredentials = "true")
 public class SpotifyController {
     
     private static final Logger logger = LoggerFactory.getLogger(SpotifyController.class);
