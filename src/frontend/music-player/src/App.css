@@ -201,9 +201,8 @@
 .track-info {
   text-align: left;
   padding: 15px;
-  background-color: hsla(222, 22%, 13%, 1);
+  background-color: hsla(222, 22%, 15%, 1);
   border-radius: 5px;
-  margin: 10px 0;
 }
 
 .control-buttons {
