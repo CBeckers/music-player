@@ -8,7 +8,7 @@ export function AdminPage() {
   const [message, setMessage] = useState('');
   const [tokenStatus, setTokenStatus] = useState('');
   
-  const backendUrl = 'http://localhost:8080/api/spotify';
+  const backendUrl = 'https://cadebeckers.com/api/spotify';
 
   const handleTestToken = async () => {
     try {

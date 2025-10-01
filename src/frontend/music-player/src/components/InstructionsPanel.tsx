@@ -1,5 +1,5 @@
 export function InstructionsPanel() {
-  const backendUrl = 'http://localhost:8080/api/spotify';
+  const backendUrl = 'https://cadebeckers.com/api/spotify';
 
   return (
     <div className="instructions">

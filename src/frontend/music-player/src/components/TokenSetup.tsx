@@ -9,7 +9,7 @@ export function TokenSetup({ onTokenSet, onTestToken }: TokenSetupProps) {
   const [accessToken, setAccessToken] = useState('');
   const [refreshToken, setRefreshToken] = useState('');
   
-  const backendUrl = 'http://localhost:8080/api/spotify';
+  const backendUrl = 'https://cadebeckers.com/api/spotify';
 
   const handleSetToken = async () => {
     try {

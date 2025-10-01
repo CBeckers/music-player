@@ -60,7 +60,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
   const [showQueue, setShowQueue] = useState(false);
   const [message, setMessage] = useState('');
 
-  const backendUrl = 'http://localhost:8080/api/spotify';
+  const backendUrl = 'https://cadebeckers.com/api/spotify';
 
   // Helper function to get album art URL (prefer medium size ~300px)
   const getAlbumArtUrl = (images: Array<{ url: string; height: number; width: number }>) => {

@@ -4,7 +4,7 @@ interface AdminPanelProps {
 }
 
 export function AdminPanel({ onTokenStatusUpdate, onTestToken }: AdminPanelProps) {
-  const backendUrl = 'http://localhost:8080/api/spotify';
+  const backendUrl = 'https://cadebeckers.com/api/spotify';
 
   const handleGetTokenInfo = async () => {
     try {
