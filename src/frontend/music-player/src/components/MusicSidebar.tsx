@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useWebSocket } from '../hooks/useWebSocket';
 
 interface PlaybackState {
   is_playing: boolean;
@@ -62,49 +61,6 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
   const [message, setMessage] = useState('');
 
   const backendUrl = 'https://cadebeckers.com/api/spotify';
-
-  // WebSocket connection for real-time updates
-  const { isConnected: isWebSocketConnected, connectionError } = useWebSocket({
-    onPlaybackUpdate: (data: string) => {
-      try {
-        if (data) {
-          const playbackState = JSON.parse(data);
-          setPlaybackState(playbackState);
-          console.log('WebSocket: Playback state updated');
-        }
-      } catch (e) {
-        console.warn('Failed to parse playback update:', e);
-      }
-    },
-    onQueueUpdate: (data: string) => {
-      try {
-        if (data) {
-          const queueState = JSON.parse(data);
-          setQueueState(queueState);
-          console.log('WebSocket: Queue state updated');
-        }
-      } catch (e) {
-        console.warn('Failed to parse queue update:', e);
-      }
-    },
-    onAuthUpdate: (isAuthenticated: boolean) => {
-      setIsAuthenticated(isAuthenticated);
-      console.log('WebSocket: Auth status updated:', isAuthenticated);
-    },
-    onControlAction: (action: string, result: string) => {
-      console.log('WebSocket: Control action:', action, result);
-      if (result === 'success') {
-        setMessage(`✅ ${action} successful`);
-      } else {
-        setMessage(`❌ ${action} failed`);
-      }
-      setTimeout(() => setMessage(''), 2000);
-    },
-    onStatusMessage: (message: string) => {
-      setMessage(message);
-      setTimeout(() => setMessage(''), 3000);
-    }
-  });
 
   // Helper function to get album art URL (prefer medium size ~300px)
   const getAlbumArtUrl = (images: Array<{ url: string; height: number; width: number }>) => {
@@ -460,8 +416,6 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         <h2>
           Now Playing 
           {isRefreshing && <span className="refreshing-indicator" style={{fontSize: '12px', color: '#999'}}>🔄</span>}
-          {isWebSocketConnected && <span className="websocket-indicator" style={{fontSize: '12px', color: '#00ff00'}} title="Real-time updates active">🔴</span>}
-          {connectionError && <span className="websocket-error" style={{fontSize: '12px', color: '#ff6666'}} title={connectionError}>⚠️</span>}
         </h2>
         {playbackState?.item ? (
           <div className="track-info">
