@@ -600,8 +600,8 @@
 
 /* Album Art Styles */
 .album-art-large {
-  width: 60px;
-  height: 60px;
+  width: 75px;
+  height: 75px;
   border-radius: 8px;
   object-fit: cover;
   margin-right: 15px;
