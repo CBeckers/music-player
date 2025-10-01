@@ -114,13 +114,13 @@ public class SpotifyController {
                     
                     logger.info("Authentication successful for user, redirecting to frontend");
                     
-                    // Redirect back to the frontend
+                    // Redirect back to the frontend on actual domain
                     return ResponseEntity.status(HttpStatus.FOUND)
-                            .header("Location", "http://localhost:5173/")
+                            .header("Location", "https://cadebeckers.com/")
                             .<Void>build();
                 })
                 .onErrorReturn(ResponseEntity.status(HttpStatus.FOUND)
-                        .header("Location", "http://localhost:5173/?error=auth_failed")
+                        .header("Location", "https://cadebeckers.com/?error=auth_failed")
                         .<Void>build());
     }
 
