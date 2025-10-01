@@ -248,10 +248,9 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     }
 
     try {
-      const response = await fetch(`${backendUrl}/queue/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackUri: uriToAdd })
+      // Use the simple GET endpoint with trackUri as a URL parameter
+      const response = await fetch(`${backendUrl}/control/queue/add?trackUri=${encodeURIComponent(uriToAdd)}`, {
+        method: 'GET'
       });
       
       if (response.ok) {
@@ -266,11 +265,13 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         
         setTimeout(() => setMessage(''), 3000);
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to add track to queue');
+        setMessage('❌ Failed to add track to queue');
+        setTimeout(() => setMessage(''), 3000);
       }
     } catch (error) {
       console.error('Error adding to queue:', error);
+      setMessage('❌ CORS Error - try refreshing page');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 

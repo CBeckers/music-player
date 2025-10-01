@@ -626,4 +626,28 @@ public class SpotifyController {
                         .body("ERROR"));
     }
     
+    /**
+     * Simple add to queue endpoint for browser compatibility
+     * Usage: /control/queue/add?trackUri=spotify:track:4uLU6hMCjMI75M1A2tKUQC
+     */
+    @GetMapping("/control/queue/add")
+    public Mono<ResponseEntity<String>> addToQueueSimple(@RequestParam String trackUri) {
+        if (trackUri == null || trackUri.trim().isEmpty()) {
+            return Mono.just(ResponseEntity.badRequest()
+                    .body("Missing trackUri parameter"));
+        }
+        
+        if (!tokenManagerService.isUserAuthenticated("default_user")) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Not authenticated"));
+        }
+        
+        logger.info("Adding track to queue (simple endpoint): {}", trackUri);
+        
+        return spotifyApiService.addToQueueWithAutoRefresh(trackUri, "default_user")
+                .then(Mono.just(ResponseEntity.ok("OK")))
+                .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("ERROR"));
+    }
+    
 }
