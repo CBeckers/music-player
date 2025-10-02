@@ -202,6 +202,25 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     }
   };
 
+  const refreshQueueFresh = async () => {
+    try {
+      // Use non-cached endpoint to force server to get fresh data from Spotify
+      const response = await fetch(`${backendUrl}/queue`);
+      if (response.ok) {
+        const data = await response.text();
+        if (data) {
+          try {
+            setQueueState(JSON.parse(data));
+          } catch (e) {
+            setQueueState(null);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing queue fresh:', error);
+    }
+  };
+
   const handleAddToQueue = async () => {
     const uriToAdd = trackUri || (searchResults.length === 1 ? searchResults[0].uri : '');
     
@@ -224,7 +243,11 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         setSearchResults([]);
         setShowSearchResults(false);
         
-        // Let server polling detect the queue change naturally
+        // Wait a bit for server cache to update, then refresh queue with fresh data
+        setTimeout(() => {
+          refreshQueueFresh();
+        }, 500);
+        
         setTimeout(() => setMessage(''), 3000);
       } else {
         setMessage('❌ Failed to add track to queue');
