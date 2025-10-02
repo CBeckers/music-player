@@ -185,8 +185,8 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
 
   const refreshQueue = async () => {
     try {
-      // Use cached endpoint for faster updates (no Spotify API delay)
-      const response = await fetch(`${backendUrl}/cached/queue`);
+      // Use non-cached endpoint to get fresh data from Spotify every time
+      const response = await fetch(`${backendUrl}/queue`);
       if (response.ok) {
         const data = await response.text();
         if (data) {
