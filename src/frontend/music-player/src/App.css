@@ -773,7 +773,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: 10px;
+  margin-left: 4px;
 }
 
 .queue-item-text {
