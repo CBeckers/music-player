@@ -901,16 +901,20 @@
     flex: 1;
     overflow: hidden;
     margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Allow flexbox shrinking */
   }
   
   .queue-header h2 {
     font-size: 14px;
+    flex-shrink: 0; /* Keep header fixed size */
   }
   
   .queue-content {
-    max-height: none;
-    height: 100%;
+    flex: 1;
     overflow-y: auto;
+    min-height: 0; /* Allow proper flexbox behavior */
   }
   
   .queue-item {
