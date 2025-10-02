@@ -885,7 +885,12 @@
   
   .search-input-group input {
     min-height: 32px;
-    font-size: 14px;
+    font-size: 16px; /* Prevent mobile zoom - must be 16px or larger */
+  }
+  
+  /* Prevent zoom on all inputs on mobile */
+  input, textarea, select {
+    font-size: 16px !important;
   }
   
   .add-queue-button {
