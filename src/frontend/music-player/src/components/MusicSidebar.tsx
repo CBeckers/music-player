@@ -54,7 +54,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
-  // Fast polling every 2 seconds - now safe with cached endpoints (no API limits!)
+  // Fast polling every 1 second - now safe with cached endpoints (no API limits!)
   // Server caches Spotify data, so we can poll frequently without rate limits
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -86,10 +86,14 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
             }
           }
         }
+        
+        // Also refresh queue every polling cycle to keep it updated
+        refreshQueue();
+        
       } catch (error) {
         console.error('Error in light polling:', error);
       }
-    }, 2000); // Check every 2 seconds for faster updates
+    }, 1000); // Check every 1 second for faster queue updates
 
     return () => clearInterval(lightPolling);
   }, [isAuthenticated]);
