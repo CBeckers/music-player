@@ -791,3 +791,135 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Mobile Layout - Music Player Only */
+@media screen and (max-width: 768px) {
+  .app {
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .main-content {
+    display: none; /* Hide main content on mobile */
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: 100vh;
+    padding: 10px;
+    overflow: hidden; /* No vertical scroll allowed */
+    box-shadow: none;
+  }
+  
+  .sidebar h1 {
+    font-size: 20px;
+    margin: 5px 0 10px 0;
+  }
+  
+  .player-container {
+    height: calc(100vh - 40px); /* Full height minus padding */
+    margin-top: 5px;
+    overflow: hidden;
+  }
+  
+  /* Compact mobile sections */
+  .player-section, .controls-section, .track-section {
+    margin: 8px 0;
+    padding: 8px 12px;
+  }
+  
+  .auth-status {
+    margin-bottom: 10px;
+    padding: 8px;
+  }
+  
+  /* Smaller album art on mobile */
+  .album-art-large {
+    width: 60px;
+    height: 60px;
+  }
+  
+  /* Compact media controls */
+  .media-controls {
+    width: 90%;
+    gap: 10px;
+  }
+  
+  .media-button-small {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+  
+  .media-button-main {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  /* Compact search section */
+  .track-section {
+    margin-bottom: 5px;
+  }
+  
+  .track-section h2 {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  
+  .search-input-group input {
+    min-height: 32px;
+    font-size: 14px;
+  }
+  
+  .add-queue-button {
+    min-height: 32px;
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+  
+  /* Mobile queue section */
+  .queue-section {
+    margin: 5px 0 0 0;
+    padding: 8px;
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .queue-header h2 {
+    font-size: 14px;
+  }
+  
+  .queue-content {
+    max-height: none;
+    height: 100%;
+    overflow-y: auto;
+  }
+  
+  .queue-item {
+    margin-bottom: 6px;
+    padding: 6px;
+  }
+  
+  .album-art-tiny {
+    width: 25px;
+    height: 25px;
+  }
+  
+  /* Hide some elements on very small screens */
+  @media screen and (max-height: 600px) {
+    .auth-status {
+      margin-bottom: 5px;
+      padding: 5px;
+    }
+    
+    .player-section {
+      margin: 5px 0;
+    }
+    
+    .queue-section {
+      margin: 2px 0 0 0;
+    }
+  }
+}
