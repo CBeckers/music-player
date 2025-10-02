@@ -11,7 +11,11 @@ interface MusicSidebarProps {
 }
 
 export function MusicSidebar({ className = '' }: MusicSidebarProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Initialize authentication state from localStorage
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const stored = localStorage.getItem('spotify-authenticated');
+    return stored === 'true';
+  });
   const [playbackState, setPlaybackState] = useState<PlaybackState | null>(null);
   const [queueState, setQueueState] = useState<QueueState | null>(null);
   const [trackUri, setTrackUri] = useState('');
@@ -24,6 +28,37 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
 
   const backendUrl = 'https://cadebeckers.com/api/spotify';
 
+  // Update localStorage whenever authentication state changes
+  const updateAuthState = (authenticated: boolean) => {
+    setIsAuthenticated(authenticated);
+    localStorage.setItem('spotify-authenticated', authenticated.toString());
+  };
+
+  // Attempt to refresh the token when it expires
+  const attemptTokenRefresh = async () => {
+    try {
+      console.log('🔄 Attempting to refresh expired token...');
+      const refreshResponse = await fetch(`${backendUrl}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include' // Include cookies for session
+      });
+      
+      if (refreshResponse.ok) {
+        console.log('✅ Token refreshed successfully');
+        updateAuthState(true);
+        setMessage('🔄 Session refreshed automatically');
+        setTimeout(() => setMessage(''), 3000);
+        return true;
+      } else {
+        console.log('❌ Token refresh failed');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      return false;
+    }
+  };
+
   // Check authentication status and get playback state
   useEffect(() => {
     const checkAuth = async () => {
@@ -31,7 +66,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         const authResponse = await fetch(`${backendUrl}/auth/status`);
         if (authResponse.ok) {
           const authData = await authResponse.json();
-          setIsAuthenticated(authData.authenticated);
+          updateAuthState(authData.authenticated);
           
           if (authData.authenticated) {
             refreshPlaybackState();
@@ -42,7 +77,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         }
       } catch (error) {
         console.error('Error checking auth:', error);
-        setIsAuthenticated(false);
+        updateAuthState(false);
       }
     };
 
@@ -86,13 +121,19 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
             }
           }
         } else if (response.status === 401 || response.status === 403) {
-          // Token expired, set authentication to false
-          console.log('🔐 Token expired, requiring re-authentication');
-          setIsAuthenticated(false);
-          setPlaybackState(null);
-          setQueueState(null);
-          setMessage('🔐 Session expired - please log in again');
-          return; // Stop further processing
+          // Token expired, try to refresh it first
+          console.log('🔐 Token expired, attempting refresh...');
+          const refreshSuccessful = await attemptTokenRefresh();
+          
+          if (!refreshSuccessful) {
+            // Refresh failed, require re-authentication
+            updateAuthState(false);
+            setPlaybackState(null);
+            setQueueState(null);
+            setMessage('🔐 Session expired - please log in again');
+            return; // Stop further processing
+          }
+          // If refresh was successful, continue with normal flow
         }
         
         // Also refresh queue every polling cycle to keep it updated
@@ -104,6 +145,18 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
     }, 1000); // Check every 1 second for faster queue updates
 
     return () => clearInterval(lightPolling);
+  }, [isAuthenticated]);
+
+  // Proactive token refresh every 30 minutes to prevent expiration
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const tokenRefreshInterval = setInterval(async () => {
+      console.log('⏰ Proactive token refresh (30 min interval)...');
+      await attemptTokenRefresh();
+    }, 30 * 60 * 1000); // 30 minutes in milliseconds
+
+    return () => clearInterval(tokenRefreshInterval);
   }, [isAuthenticated]);
 
   const handleLogin = () => {
@@ -205,10 +258,16 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
           }
         }
       } else if (response.status === 401 || response.status === 403) {
-        // Token expired during queue refresh
-        console.log('🔐 Token expired during queue refresh');
-        setIsAuthenticated(false);
-        setQueueState(null);
+        // Token expired during queue refresh, try to refresh
+        console.log('🔐 Token expired during queue refresh, attempting refresh...');
+        const refreshSuccessful = await attemptTokenRefresh();
+        
+        if (!refreshSuccessful) {
+          // Refresh failed
+          updateAuthState(false);
+          setQueueState(null);
+        }
+        // If refresh was successful, the next polling cycle will work
       }
     } catch (error) {
       console.error('Error refreshing queue:', error);
