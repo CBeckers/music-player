@@ -851,7 +851,7 @@
   
   /* Compact media controls */
   .media-controls {
-    width: 90%;
+    width: 75%;
     gap: 10px;
   }
   
@@ -870,7 +870,7 @@
   /* Compact search section */
   .track-section {
     margin-bottom: 5px;
-    margin-top: -40px;
+    margin-top: -30px;
     margin-bottom: -15px;
   }
   
