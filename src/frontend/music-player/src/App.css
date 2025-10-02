@@ -826,7 +826,6 @@
     overflow: hidden;
     width: 100%; /* Ensure full width */
     box-sizing: border-box; /* Include padding in width calculation */
-    margin-top: -10px;
   }
   
   /* Compact mobile sections */
@@ -834,6 +833,10 @@
     margin: 8px 0;
     padding: 8px 12px;
   }
+
+  .player-section {
+  margin-top: -10px;
+}
   
   .auth-status {
     margin-bottom: 10px;
