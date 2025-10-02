@@ -12,13 +12,13 @@ export function QueueDisplay({ queueState, showQueue, onToggleQueue }: QueueDisp
     <div className="queue-section">
       <div className="queue-header">
         <h2>Queue</h2>
-        <button 
+        {/* <button 
           onClick={onToggleQueue}
           className="control-button" 
           style={{fontSize: '12px', padding: '5px 10px'}}
         >
           {showQueue ? '🔼 Hide' : '🔽 Show'}
-        </button>
+        </button> */}
       </div>
       
       {showQueue && (
