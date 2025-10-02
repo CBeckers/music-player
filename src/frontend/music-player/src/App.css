@@ -72,7 +72,8 @@
   background-color: hsla(222, 22%, 20%, 1);
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 80px); /* Full height minus padding */
+  height: calc(100vh - 70px); /* Full height minus padding */
+  margin-top: 15px;
 }
 
 .player-section, .controls-section, .track-section, .volume-section {

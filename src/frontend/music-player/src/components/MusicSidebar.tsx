@@ -356,8 +356,8 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
 
   return (
     <div className={`sidebar ${className}`}>
-        <h1>🎵 Music 🎵</h1>
-        <div className='player-container'>
+      <h1>🎵 Music 🎵</h1>
+      <div className='player-container'>
         
         <AuthStatus 
           isAuthenticated={isAuthenticated}
