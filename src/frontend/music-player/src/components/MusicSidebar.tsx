@@ -85,6 +85,14 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
               lastPlayingState = currentPlaying;
             }
           }
+        } else if (response.status === 401 || response.status === 403) {
+          // Token expired, set authentication to false
+          console.log('🔐 Token expired, requiring re-authentication');
+          setIsAuthenticated(false);
+          setPlaybackState(null);
+          setQueueState(null);
+          setMessage('🔐 Session expired - please log in again');
+          return; // Stop further processing
         }
         
         // Also refresh queue every polling cycle to keep it updated
@@ -196,6 +204,11 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
             setQueueState(null);
           }
         }
+      } else if (response.status === 401 || response.status === 403) {
+        // Token expired during queue refresh
+        console.log('🔐 Token expired during queue refresh');
+        setIsAuthenticated(false);
+        setQueueState(null);
       }
     } catch (error) {
       console.error('Error refreshing queue:', error);
