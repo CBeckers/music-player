@@ -798,6 +798,7 @@
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    width: 100vw; /* Ensure full viewport width */
   }
   
   .main-content {
@@ -810,6 +811,7 @@
     padding: 10px;
     overflow: hidden; /* No vertical scroll allowed */
     box-shadow: none;
+    box-sizing: border-box; /* Include padding in width calculation */
   }
   
   .sidebar h1 {
@@ -821,6 +823,8 @@
     height: calc(100vh - 40px); /* Full height minus padding */
     margin-top: 5px;
     overflow: hidden;
+    width: 100%; /* Ensure full width */
+    box-sizing: border-box; /* Include padding in width calculation */
   }
   
   /* Compact mobile sections */
