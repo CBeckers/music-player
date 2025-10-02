@@ -27,7 +27,7 @@ export function QueueDisplay({ queueState, showQueue, onToggleQueue }: QueueDisp
             <div className="queue-list">
               {queueState.queue.length > 0 ? (
                 <ul style={{listStyle: 'none', padding: 0, fontSize: '12px'}}>
-                  {queueState.queue.slice(0, 5).map((track, index) => (
+                  {queueState.queue.map((track, index) => (
                     <li key={index} className="queue-item">
                       <div className="queue-item-content">
                         {track.album?.images && (
@@ -47,9 +47,6 @@ export function QueueDisplay({ queueState, showQueue, onToggleQueue }: QueueDisp
                       </div>
                     </li>
                   ))}
-                  {queueState.queue.length > 5 && (
-                    <li style={{color: '#888', fontSize: '11px'}}>...and {queueState.queue.length - 5} more</li>
-                  )}
                 </ul>
               ) : (
                 <p style={{fontSize: '12px', color: '#888'}}>Queue is empty</p>

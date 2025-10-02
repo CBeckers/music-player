@@ -423,12 +423,12 @@
 }
 
 .queue-content {
-  max-height: 200px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
 .queue-list ul {
-  max-height: 150px;
+  max-height: 400px;
   overflow-y: auto;
 }
 

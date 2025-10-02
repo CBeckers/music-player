@@ -85,7 +85,6 @@ export function TrackSearch({
           ))}
         </div>
       )}
-      {message && <div className="message" style={{fontSize: '12px', marginTop: '5px'}}>{message}</div>}
     </div>
   );
 }

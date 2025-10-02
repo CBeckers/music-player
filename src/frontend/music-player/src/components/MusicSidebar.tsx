@@ -19,7 +19,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
   const [searchResults, setSearchResults] = useState<Track[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [showQueue, setShowQueue] = useState(false);
+  const [showQueue, setShowQueue] = useState(true);
   const [message, setMessage] = useState('');
 
   const backendUrl = 'https://cadebeckers.com/api/spotify';
