@@ -812,6 +812,7 @@
     overflow: hidden; /* No vertical scroll allowed */
     box-shadow: none;
     box-sizing: border-box; /* Include padding in width calculation */
+    margin-top: -10px;
   }
   
   .sidebar h1 {
