@@ -900,6 +900,7 @@
     padding: 8px;
     flex: 1;
     overflow: hidden;
+    margin-top: 10px;
   }
   
   .queue-header h2 {
@@ -910,7 +911,6 @@
     max-height: none;
     height: 100%;
     overflow-y: auto;
-    margin-top: 10px;
   }
   
   .queue-item {
