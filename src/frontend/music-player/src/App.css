@@ -910,6 +910,7 @@
     max-height: none;
     height: 100%;
     overflow-y: auto;
+    margin-top: 10px;
   }
   
   .queue-item {
