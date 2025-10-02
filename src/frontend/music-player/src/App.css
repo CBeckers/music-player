@@ -764,7 +764,7 @@
 .queue-item {
   margin-bottom: 8px;
   padding: 8px;
-  background-color: rgba(255,255,255,0.1);
+  background-color: hsla(222, 25%, 15%, 1);
   border-radius: 6px;
   border: 1px solid rgba(255,255,255,0.1);
 }
