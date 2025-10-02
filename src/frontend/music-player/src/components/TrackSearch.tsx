@@ -32,7 +32,7 @@ export function TrackSearch({
           type="text"
           value={searchQuery}
           onChange={onSearchChange}
-          placeholder="Search: artist - song name or paste spotify:track:..."
+          placeholder="Enter song name and artist"
           className="track-input"
         />
         <button 
