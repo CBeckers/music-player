@@ -477,11 +477,6 @@
   transition: all 0.2s ease;
 }
 
-.queue-list li:hover {
-  background-color: rgba(255,255,255,0.15) !important;
-  transform: translateX(2px);
-}
-
 .track-buttons {
   margin-top: 10px;
   display: flex;
