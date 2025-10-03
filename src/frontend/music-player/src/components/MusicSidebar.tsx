@@ -24,6 +24,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [message, setMessage] = useState('');
+  const [consecutiveAuthErrors, setConsecutiveAuthErrors] = useState(0);
 
   const backendUrl = 'https://cadebeckers.com/api/spotify';
 
@@ -95,13 +96,31 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
             }
           }
         } else if (response.status === 401 || response.status === 403) {
-          // Token expired, backend should handle refresh automatically
-          console.log('🔐 Token expired - backend refresh failed, requiring re-authentication');
-          updateAuthState(false);
-          setPlaybackState(null);
-          setQueueState(null);
-          setMessage('🔐 Session expired - please log in again');
-          return; // Stop further processing
+          // Token might be expired, but give backend time to refresh
+          const newErrorCount = consecutiveAuthErrors + 1;
+          setConsecutiveAuthErrors(newErrorCount);
+          
+          if (newErrorCount >= 3) {
+            // After 3 consecutive auth errors (3+ seconds), assume real auth failure
+            console.log('🔐 Multiple auth failures - backend refresh failed, requiring re-authentication');
+            updateAuthState(false);
+            setPlaybackState(null);
+            setQueueState(null);
+            setMessage('🔐 Session expired - please log in again');
+            setConsecutiveAuthErrors(0); // Reset counter
+            return;
+          } else {
+            // First few auth errors - might be temporary during token refresh
+            console.log(`🔐 Auth error ${newErrorCount}/3 - waiting for potential token refresh...`);
+            setMessage(`🔐 Refreshing authentication... (${newErrorCount}/3)`);
+            return; // Continue polling to see if it resolves
+          }
+        } else {
+          // Successful response - reset error counter
+          if (consecutiveAuthErrors > 0) {
+            setConsecutiveAuthErrors(0);
+            setMessage(''); // Clear any refresh message
+          }
         }
         
         // Also refresh queue every polling cycle to keep it updated
@@ -214,10 +233,18 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
           }
         }
       } else if (response.status === 401 || response.status === 403) {
-        // Token expired during queue refresh - backend should handle refresh
-        console.log('🔐 Token expired during queue refresh - backend refresh failed');
-        updateAuthState(false);
-        setQueueState(null);
+        // Token might be expired during queue refresh - use same retry logic as main polling
+        const newErrorCount = consecutiveAuthErrors + 1;
+        setConsecutiveAuthErrors(newErrorCount);
+        
+        if (newErrorCount >= 3) {
+          console.log('🔐 Multiple auth failures in queue refresh - requiring re-authentication');
+          updateAuthState(false);
+          setQueueState(null);
+          setConsecutiveAuthErrors(0);
+        } else {
+          console.log(`🔐 Queue refresh auth error ${newErrorCount}/3 - waiting for token refresh...`);
+        }
       }
     } catch (error) {
       console.error('Error refreshing queue:', error);

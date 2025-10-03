@@ -94,26 +94,39 @@ public class TokenManagerService {
     }
     
     /**
-     * Scheduled method to refresh all active user tokens every 30 minutes
-     * This ensures tokens stay fresh even when users are inactive
+     * Scheduled method to refresh all active user tokens every 25 minutes
+     * This ensures tokens stay fresh with 5 minutes buffer before expiration
      */
-    @Scheduled(fixedRate = 1800000) // 30 minutes in milliseconds (production)
+    @Scheduled(fixedRate = 1500000) // 25 minutes in milliseconds (5 min buffer)
     public void refreshAllActiveTokens() {
         logger.info("🔄 Starting scheduled token refresh for all active users...");
         
         var activeUserIds = tokenStorageService.getAllActiveUserIds();
         logger.info("Found {} active users with tokens", activeUserIds.size());
         
+        if (activeUserIds.isEmpty()) {
+            logger.info("🔄 No active users found, skipping token refresh");
+            return;
+        }
+        
         for (String userId : activeUserIds) {
-            refreshTokenForUser(userId)
-                    .subscribe(
-                        newAccessToken -> logger.info("✅ Successfully refreshed token for user: {}", userId),
-                        error -> {
-                            logger.error("❌ Failed to refresh token for user: {} - {}", userId, error.getMessage());
-                            // Don't remove tokens on scheduled refresh failure - let them expire naturally
-                            // The user might just be temporarily offline
-                        }
-                    );
+            try {
+                refreshTokenForUser(userId)
+                        .timeout(java.time.Duration.ofSeconds(30))
+                        .subscribe(
+                            newAccessToken -> {
+                                logger.info("✅ Successfully refreshed token for user: {}", userId);
+                                // Optionally broadcast token refresh success to frontend
+                            },
+                            error -> {
+                                logger.error("❌ Failed to refresh token for user: {} - {}", userId, error.getMessage());
+                                // On scheduled refresh failure, we'll let the retryWithTokenRefresh handle it
+                                // when the user actually makes a request
+                            }
+                        );
+            } catch (Exception e) {
+                logger.error("❌ Exception during token refresh for user: {} - {}", userId, e.getMessage());
+            }
         }
         
         logger.info("🔄 Completed scheduled token refresh cycle");

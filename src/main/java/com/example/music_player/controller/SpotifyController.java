@@ -825,4 +825,35 @@ public class SpotifyController {
         return ResponseEntity.ok(result);
     }
     
+    /**
+     * Health check endpoint to monitor token refresh status
+     */
+    @GetMapping("/admin/token-health")
+    public ResponseEntity<Map<String, Object>> getTokenHealth() {
+        logger.info("🏥 Token health check requested");
+        
+        var result = new HashMap<String, Object>();
+        var activeUsers = tokenStorageService.getAllActiveUserIds();
+        
+        result.put("message", "Token health check");
+        result.put("activeUserCount", activeUsers.size());
+        result.put("activeUsers", activeUsers);
+        result.put("refreshIntervalMinutes", 25);
+        result.put("nextRefreshInfo", "Tokens refresh every 25 minutes to maintain 5-minute buffer");
+        
+        // Check if each user's token is still valid
+        var userTokenStatus = new HashMap<String, Object>();
+        for (String userId : activeUsers) {
+            boolean hasToken = tokenStorageService.hasToken(userId);
+            boolean isAuthenticated = tokenManagerService.isUserAuthenticated(userId);
+            userTokenStatus.put(userId, Map.of(
+                "hasToken", hasToken,
+                "isAuthenticated", isAuthenticated
+            ));
+        }
+        result.put("userTokenStatus", userTokenStatus);
+        
+        return ResponseEntity.ok(result);
+    }
+    
 }
