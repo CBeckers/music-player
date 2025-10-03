@@ -805,4 +805,24 @@ public class SpotifyController {
         }
     }
     
+    /**
+     * Test endpoint to manually trigger token refresh for all users
+     */
+    @GetMapping("/admin/test-token-refresh")
+    public ResponseEntity<Map<String, Object>> testTokenRefresh() {
+        logger.info("🧪 Manual token refresh test triggered");
+        
+        var result = new HashMap<String, Object>();
+        var activeUsers = tokenStorageService.getAllActiveUserIds();
+        
+        result.put("message", "Token refresh test started");
+        result.put("activeUserCount", activeUsers.size());
+        result.put("activeUsers", activeUsers);
+        
+        // Trigger the refresh manually
+        tokenManagerService.refreshAllActiveTokens();
+        
+        return ResponseEntity.ok(result);
+    }
+    
 }

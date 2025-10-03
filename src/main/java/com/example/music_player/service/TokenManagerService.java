@@ -97,7 +97,7 @@ public class TokenManagerService {
      * Scheduled method to refresh all active user tokens every 30 minutes
      * This ensures tokens stay fresh even when users are inactive
      */
-    @Scheduled(fixedRate = 1800000) // 30 minutes in milliseconds
+    @Scheduled(fixedRate = 1800000) // 30 minutes in milliseconds (production)
     public void refreshAllActiveTokens() {
         logger.info("🔄 Starting scheduled token refresh for all active users...");
         
