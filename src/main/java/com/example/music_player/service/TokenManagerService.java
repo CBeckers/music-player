@@ -2,6 +2,7 @@ package com.example.music_player.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
@@ -90,5 +91,31 @@ public class TokenManagerService {
      */
     public boolean isUserAuthenticated(String userId) {
         return tokenStorageService.hasToken(userId);
+    }
+    
+    /**
+     * Scheduled method to refresh all active user tokens every 30 minutes
+     * This ensures tokens stay fresh even when users are inactive
+     */
+    @Scheduled(fixedRate = 1800000) // 30 minutes in milliseconds
+    public void refreshAllActiveTokens() {
+        logger.info("🔄 Starting scheduled token refresh for all active users...");
+        
+        var activeUserIds = tokenStorageService.getAllActiveUserIds();
+        logger.info("Found {} active users with tokens", activeUserIds.size());
+        
+        for (String userId : activeUserIds) {
+            refreshTokenForUser(userId)
+                    .subscribe(
+                        newAccessToken -> logger.info("✅ Successfully refreshed token for user: {}", userId),
+                        error -> {
+                            logger.error("❌ Failed to refresh token for user: {} - {}", userId, error.getMessage());
+                            // Don't remove tokens on scheduled refresh failure - let them expire naturally
+                            // The user might just be temporarily offline
+                        }
+                    );
+        }
+        
+        logger.info("🔄 Completed scheduled token refresh cycle");
     }
 }

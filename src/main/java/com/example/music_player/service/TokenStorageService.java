@@ -3,6 +3,7 @@ package com.example.music_player.service;
 import org.springframework.stereotype.Service;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class TokenStorageService {
@@ -40,5 +41,12 @@ public class TokenStorageService {
     public void removeTokens(String userId) {
         userTokens.remove(userId);
         refreshTokens.remove(userId);
+    }
+    
+    /**
+     * Get all user IDs that have active tokens
+     */
+    public Set<String> getAllActiveUserIds() {
+        return userTokens.keySet();
     }
 }
