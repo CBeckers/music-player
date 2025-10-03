@@ -4,10 +4,9 @@ import { getAlbumArtUrl } from './shared/types';
 interface QueueDisplayProps {
   queueState: QueueState | null;
   showQueue: boolean;
-  onToggleQueue: () => void;
 }
 
-export function QueueDisplay({ queueState, showQueue, onToggleQueue }: QueueDisplayProps) {
+export function QueueDisplay({ queueState, showQueue }: QueueDisplayProps) {
   return (
     <div className="queue-section">
       <div className="queue-header">

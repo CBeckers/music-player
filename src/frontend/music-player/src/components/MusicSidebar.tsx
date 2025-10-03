@@ -23,7 +23,6 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
   const [searchResults, setSearchResults] = useState<Track[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [showQueue, setShowQueue] = useState(true);
   const [message, setMessage] = useState('');
 
   const backendUrl = 'https://cadebeckers.com/api/spotify';
@@ -45,7 +44,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
           
           if (authData.authenticated) {
             refreshPlaybackState();
-            if (showQueue) {
+            if (true) {
               refreshQueue();
             }
           }
@@ -398,7 +397,6 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
           onResume={handleResume}
           onNext={handleNext}
           onPrevious={handlePrevious}
-          onRefresh={refreshPlaybackState}
         />
         
         <TrackSearch
@@ -415,11 +413,7 @@ export function MusicSidebar({ className = '' }: MusicSidebarProps) {
         
         <QueueDisplay
           queueState={queueState}
-          showQueue={showQueue}
-          onToggleQueue={() => {
-            setShowQueue(!showQueue);
-            if (!showQueue) refreshQueue();
-          }}
+          showQueue={true}
         />
       </div>
     </div>

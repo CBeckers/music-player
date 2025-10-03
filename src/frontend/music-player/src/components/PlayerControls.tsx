@@ -6,7 +6,6 @@ interface PlayerControlsProps {
   onResume: () => void;
   onNext: () => void;
   onPrevious: () => void;
-  onRefresh: () => void;
 }
 
 export function PlayerControls({ 
@@ -14,8 +13,7 @@ export function PlayerControls({
   onPause, 
   onResume, 
   onNext, 
-  onPrevious, 
-  onRefresh 
+  onPrevious 
 }: PlayerControlsProps) {
   return (
     <div className="controls-section">

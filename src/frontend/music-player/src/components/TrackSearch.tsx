@@ -85,6 +85,12 @@ export function TrackSearch({
           ))}
         </div>
       )}
+      
+      {message && (
+        <div className="message-display" style={{marginTop: '10px', padding: '8px', borderRadius: '4px', backgroundColor: '#f0f0f0', color: '#333'}}>
+          {message}
+        </div>
+      )}
     </div>
   );
 }
